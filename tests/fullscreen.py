@@ -15,7 +15,8 @@ with sync_playwright() as p:
         page.locator('#focus-mode').click()
         page.wait_for_function('!!document.fullscreenElement')
         box = page.locator('#board').bounding_box()
-        assert box == {'x': 0, 'y': 44, 'width': width, 'height': height - 44}, box
+        assert box['x'] == 0 and box['width'] == width and box['y'] >= 88, box
+        assert abs(box['y'] + box['height'] - height) < 1, box
         assert page.evaluate('document.documentElement.scrollHeight <= innerHeight')
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
         assert page.locator('.game').evaluate('e => e.scrollHeight <= e.clientHeight')
@@ -30,7 +31,18 @@ with sync_playwright() as p:
         assert abs(last['y'] + last['height'] - box['y'] - box['height']) < 1, last
         assert page.locator('.card').count() == 25
         assert page.locator('#board').evaluate('e => e.scrollHeight <= e.clientHeight + 1')
-        assert page.locator('.board-heading .view-switch').is_hidden()
+        for selector in ['#player', '#spymaster', '#meanings', '#confirm', '#swap-languages', '#share']:
+            control = page.locator(selector)
+            assert control.is_visible(), selector
+            bounds = control.bounding_box()
+            assert bounds['y'] + bounds['height'] <= box['y'], (selector, bounds)
+            assert bounds['x'] >= 0 and bounds['x'] + bounds['width'] <= width, (selector, bounds)
+        page.locator('#meanings').uncheck()
+        assert page.locator('.meaning').first.is_hidden()
+        page.locator('#meanings').check()
+        language = page.locator('#main-language').input_value()
+        page.locator('#swap-languages').click()
+        assert page.locator('#meaning-language').input_value() == language
         page.mouse.move(width / 2, height / 2)
         page.mouse.wheel(0, 600)
         assert page.locator('#board').bounding_box() == box

@@ -106,6 +106,7 @@
       const translation = card.translations[meaningLanguage];
       const button = document.createElement('button');
       button.className = `card${visible ? ` ${card.team}` : ''}${revealed ? ' revealed' : ''}`;
+      if (revealed && room && !room.hostKey) button.classList.add('synced-reveal');
       if (word.length > 14) button.classList.add('long-word');
       button.dataset.index = index;
       button.disabled = revealed || !!state.winner || spy || joiningRoom || !!(room && (!room.hostKey || !room.connected || room.busy));

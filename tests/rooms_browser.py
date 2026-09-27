@@ -51,6 +51,10 @@ with sync_playwright() as p:
         expect(page.locator('.revealed')).to_have_count(2)
     expect(other.locator('.revealed')).to_have_count(0)
     # UI restrictions are also enforced by the API.
+    for page in [guest_b, guest_c]:
+        expect(page.locator('.synced-reveal')).to_have_count(2)
+        assert page.locator('.synced-reveal').first.evaluate("e => getComputedStyle(e).backgroundColor.endsWith(', 0.28)')")
+    expect(host.locator('.synced-reveal')).to_have_count(0)
     denied = contexts[1].request.post(f'{API}/api/rooms/action', data={
         'room': room_id, 'action': 'reveal', 'revision': 1, 'index': neutral[2]})
     assert denied.status == 403
