@@ -15,12 +15,16 @@ with sync_playwright() as p:
         page.locator('#focus-mode').click()
         page.wait_for_function('!!document.fullscreenElement')
         box = page.locator('#board').bounding_box()
-        assert box == {'x': 0, 'y': 0, 'width': width, 'height': height}, box
+        assert abs(box['width'] / box['height'] - 16 / 9) < .01, box
+        assert box['width'] <= min(width, 1200) and box['height'] <= height, box
+        assert abs(box['x'] * 2 + box['width'] - width) < 1, box
+        assert abs(box['y'] * 2 + box['height'] - height) < 1, box
         first = page.locator('.card').first.bounding_box()
         last = page.locator('.card').last.bounding_box()
-        assert first['x'] == 0 and first['y'] == 0, first
-        assert abs(last['x'] + last['width'] - width) < 1, last
-        assert abs(last['y'] + last['height'] - height) < 1, last
+        assert abs(first['x'] - box['x']) < 1 and abs(first['y'] - box['y']) < 1, first
+        assert first['width'] > first['height'], first
+        assert abs(last['x'] + last['width'] - box['x'] - box['width']) < 1, last
+        assert abs(last['y'] + last['height'] - box['y'] - box['height']) < 1, last
         assert page.locator('.card').count() == 25
         assert page.locator('#board').evaluate('e => e.scrollHeight <= e.clientHeight + 1')
         assert page.locator('.board-heading .view-switch').is_hidden()

@@ -211,22 +211,30 @@ body.game-focus .board-heading > :not(.scores) { display: none !important; }
 body.game-focus main { width: 100%; max-width: none; height: 100dvh; margin: 0; padding: 0; }
 body.game-focus .game { height: 100%; border: 0; border-radius: 0; box-shadow: none; }
 body.game-focus .play-layout { height: 100%; padding: 0; }
-body.game-focus .board-section { height: 100%; display: flex; flex-direction: column; }
-/* Overlay controls never reserve space: all 25 cards reach the viewport edges. */
+body.game-focus .board-section { height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+/* Keep the board landscape even when the screen itself is tall. */
 body.game-focus .board-heading { position: fixed; z-index: 8; top: max(4px, env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); margin: 0; pointer-events: none; }
 body.game-focus .scores { margin: 0; gap: 16px; padding: 3px 12px; border-radius: 999px; background: #faf9f4ed; }
 body.game-focus .scores strong { font-size: 22px; }
 body.game-focus .spy-notice { position: fixed; z-index: 8; bottom: 4px; left: 50%; transform: translateX(-50%); margin: 0; padding: 4px 10px; pointer-events: none; }
-body.game-focus .board { flex: 1; width: 100%; height: 100%; min-height: 0; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(5, minmax(0, 1fr)); gap: 2px; }
+body.game-focus .board { flex: none; width: min(100vw, 177.77778dvh, 1200px); height: auto; aspect-ratio: 16 / 9; min-height: 0; container-type: size; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(5, minmax(0, 1fr)); gap: 3px; }
 body.game-focus .card { min-height: 0; width: 100%; height: 100%; aspect-ratio: auto; border-radius: 0; border-bottom-width: 1px; padding: 16px 4px 4px; overflow: hidden; }
 body.game-focus .card:not(:disabled):hover { transform: none; }
-body.game-focus .card .term { font-size: clamp(13px, min(3vw, 4dvh), 42px); line-height: 1.45; }
-body.game-focus .card.long-word .term { font-size: clamp(11px, min(2.5vw, 3.4dvh), 34px); }
-body.game-focus .card .meaning { font-size: clamp(9px, min(1.4vw, 2dvh), 20px); line-height: 1.3; }
+body.game-focus .card .term { font-size: clamp(9px, 2.6cqw, 32px); line-height: 1.45; }
+body.game-focus .card.long-word .term { font-size: clamp(8px, 2.1cqw, 26px); }
+body.game-focus .card .meaning { font-size: clamp(7px, 1.25cqw, 15px); line-height: 1.3; }
 body.game-focus .card .identity { position: absolute; top: 3px; right: 5px; margin: 0; font-size: 8px; }
 body.game-focus .card .number { top: 3px; font-size: 8px; }
 @media (max-height: 450px) {
   body.game-focus .scores strong { font-size: 18px; }
   body.game-focus .card { padding-top: 10px; }
   body.game-focus .card .number, body.game-focus .card .identity { font-size: 6px; }
+}
+@media (orientation: portrait) {
+  body.game-focus .card { padding: 9px 2px 2px; }
+  body.game-focus .card .number, body.game-focus .card .identity { font-size: 6px; }
+}
+@media (min-width: 901px) {
+  body:not(.game-focus) .board { aspect-ratio: 16 / 9; grid-template-rows: repeat(5, minmax(0, 1fr)); }
+  body:not(.game-focus) .card { min-height: 0; }
 }
