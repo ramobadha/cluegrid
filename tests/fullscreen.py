@@ -15,7 +15,7 @@ with sync_playwright() as p:
         page.locator('#focus-mode').click()
         page.wait_for_function('!!document.fullscreenElement')
         box = page.locator('#board').bounding_box()
-        assert box == {'x': 0, 'y': 28, 'width': width, 'height': height - 28}, box
+        assert box == {'x': 0, 'y': 44, 'width': width, 'height': height - 44}, box
         assert page.evaluate('document.documentElement.scrollHeight <= innerHeight')
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
         assert page.locator('.game').evaluate('e => e.scrollHeight <= e.clientHeight')
@@ -35,9 +35,10 @@ with sync_playwright() as p:
         page.mouse.wheel(0, 600)
         assert page.locator('#board').bounding_box() == box
         page.wait_for_timeout(2500)
-        assert page.locator('#focus-reveal').evaluate('e => getComputedStyle(e).opacity') == '0'
+        exit_box = page.locator('#focus-exit').bounding_box()
+        assert exit_box['y'] + exit_box['height'] <= box['y']
+        assert page.locator('#focus-exit').is_visible()
         page.screenshot(path=f'test-artifacts/fullscreen-{width}.png')
-        page.locator('#focus-reveal').click()
         page.locator('#focus-exit').focus()
         page.wait_for_timeout(2500)
         assert page.locator('#focus-exit').evaluate('e => getComputedStyle(e).opacity') == '1'
@@ -49,10 +50,10 @@ with sync_playwright() as p:
     page.locator('#focus-mode').click()
     page.wait_for_function("document.body.classList.contains('game-focus')")
     assert not page.evaluate('!!document.fullscreenElement')
-    assert page.locator('#focus-exit').inner_text() == 'Exit grid view'
+    assert page.locator('#focus-exit').get_attribute('aria-label') == 'Exit grid view'
     assert page.evaluate('document.documentElement.scrollHeight <= innerHeight')
     page.locator('#focus-exit').click()
     assert not page.evaluate("document.body.classList.contains('game-focus')")
     assert page.locator('#focus-exit').is_hidden()
     browser.close()
-    print('Fullscreen passed: native entry/exit, grid fit, hidden controls, keyboard access, denied request.')
+    print('Fullscreen passed: native entry/exit, grid fit, persistent exit icon, keyboard access, denied request.')

@@ -5,6 +5,14 @@
   const params = new URLSearchParams(location.search);
   let version = Object.hasOwn(WORD_BANKS, params.get('v')) ? params.get('v') : latestVersion;
   let seed, board, state, spy = false, history = [];
+  let announcementTimer;
+  function announceResult(message) {
+    clearTimeout(announcementTimer);
+    $('game-result').textContent = message;
+    $('game-result').hidden = false;
+    $('status').textContent = message;
+    announcementTimer = setTimeout(() => { $('game-result').hidden = true; }, 3000);
+  }
   const supportedLanguages = WORD_BANK_LANGUAGES[version].filter(code => Object.hasOwn(LANGUAGES, code));
   let preferences = {};
   try {
@@ -49,6 +57,8 @@
     catch { $('status').textContent = 'Browser storage is unavailable. Keep this tab open to retain progress.'; }
   }
   function load(value, restore = true) {
+    clearTimeout(announcementTimer);
+    $('game-result').hidden = true;
     seed = value.trim().toLowerCase().slice(0, 80) || 'namaste';
     const words = WORD_BANKS[version];
     board = Game.generate(seed, words, Math.seedrandom);
@@ -116,6 +126,11 @@
     const card = board.cards[index];
     $('status').textContent = `${card.translations[meaningLanguage]}: ${card.team === 'neutral' ? 'civilian' : card.team}. ${state.winner === 'assassin' ? 'Assassin revealed. Game over.' : state.winner ? `${title(state.winner)} team wins!` : ''}`;
     save();
+    if (state.winner === 'assassin') {
+      announceResult('Game over');
+    } else if (state.winner) {
+      announceResult(`Game over — ${title(state.winner)} team wins!`);
+    }
   }
   function ask(heading, message, actionLabel, action, gujarati = false, meaning = '') {
     $('modal-title').textContent = heading;
@@ -182,25 +197,17 @@
     [mainLanguage, meaningLanguage] = [meaningLanguage, mainLanguage];
     applyLanguages();
   };
-  let controlsTimer, orientationLocked = false;
+  let orientationLocked = false;
   const fullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement;
-  function showFocusControls() {
-    if (!document.body.classList.contains('game-focus')) return;
-    document.body.classList.add('focus-controls-visible');
-    clearTimeout(controlsTimer);
-    controlsTimer = setTimeout(() => document.body.classList.remove('focus-controls-visible'), 2200);
-  }
   function updateFocusMode(enabled) {
     document.body.classList.toggle('game-focus', enabled);
-    document.body.classList.remove('focus-controls-visible');
-    clearTimeout(controlsTimer);
     $('focus-exit').hidden = !enabled;
-    $('focus-exit').textContent = fullscreenElement() ? 'Exit full screen' : 'Exit grid view';
-    $('focus-reveal').hidden = !enabled;
+    const exitLabel = fullscreenElement() ? 'Exit full screen' : 'Exit grid view';
+    $('focus-exit').setAttribute('aria-label', exitLabel);
+    $('focus-exit').title = exitLabel;
     $('focus-mode').setAttribute('aria-pressed', String(enabled));
     if (enabled) {
       $('focus-mode').blur();
-      showFocusControls();
     } else {
       if (orientationLocked) {
         try { screen.orientation.unlock(); } catch { /* Some browsers unlock automatically. */ }
@@ -238,14 +245,10 @@
     try {
       if (document.exitFullscreen) await document.exitFullscreen();
       else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
-    } catch { showFocusControls(); }
+    } catch { $('focus-exit').focus(); }
   };
-  $('focus-reveal').onclick = showFocusControls;
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && document.body.classList.contains('game-focus') && !fullscreenElement() && !$('modal').open) updateFocusMode(false);
-  });
-  document.addEventListener('pointermove', event => {
-    if (event.clientY < 48) showFocusControls();
   });
   for (const event of ['fullscreenchange', 'webkitfullscreenchange']) {
     document.addEventListener(event, () => updateFocusMode(!!fullscreenElement()));

@@ -27,8 +27,7 @@ with sync_playwright() as p:
     assert page.evaluate('!!document.fullscreenElement')
     page.mouse.move(500, 500)
     page.wait_for_timeout(2500)
-    assert page.locator('#focus-exit').evaluate('e => getComputedStyle(e).opacity') == '0'
-    page.locator('#focus-reveal').click()
+    assert page.locator('#focus-exit').evaluate('e => getComputedStyle(e).opacity') == '1'
     page.locator('#focus-exit').click()
     page.wait_for_function("!document.body.classList.contains('game-focus')")
     assert page.locator('.toolbar').is_visible()
@@ -128,6 +127,33 @@ with sync_playwright() as p:
     page.wait_for_load_state('load')
     assert 'unsupported vocabulary version' in page.locator('#status').inner_text()
     assert 'v=gu-v2' in page.url
+    # Results appear over the board in fullscreen and disappear after three seconds.
+    for team in ['red', 'blue', 'assassin']:
+        page.goto(f'{base_url}/?seed=result-{team}')
+        page.wait_for_load_state('load')
+        page.locator('#confirm').uncheck()
+        indices = page.evaluate("""team => Game.generate(`result-${team}`, WORD_BANKS['gu-v2'], Math.seedrandom)
+            .cards.flatMap((card, index) => card.team === team ? [index] : [])""", team)
+        page.locator('#focus-mode').click()
+        page.wait_for_function("document.body.classList.contains('game-focus')")
+        page.clock.install()
+        for index in indices:
+            page.locator(f'.card[data-index="{index}"]').click()
+        if team == 'assassin':
+            assert page.locator('#modal').is_hidden()
+            expected = 'Game over'
+        else:
+            expected = f'Game over — {team.title()} team wins!'
+        assert page.locator('#game-result').inner_text() == expected
+        assert page.locator('#game-result').is_visible()
+        assert page.locator('.card:disabled').count() == 25
+        page.clock.fast_forward(2900)
+        assert page.locator('#game-result').is_visible()
+        page.clock.fast_forward(100)
+        assert page.locator('#game-result').is_hidden()
+        assert page.locator('#status').inner_text() == expected
+        page.locator('#focus-exit').click()
+        page.wait_for_function("!document.body.classList.contains('game-focus')")
     assert not errors, errors
     browser.close()
     print('Browser checks passed: gameplay, legacy seeds and progress, new-bank upgrade, unknown-version warning, long terms at 320/375/768/1440px; no JS errors.')

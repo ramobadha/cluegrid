@@ -194,11 +194,9 @@ dialog .dialog-meaning { font-size: 17px; text-align: center; margin: 0; }
 body { padding-bottom: 0; }
 .focus-mode { min-width: 48px; min-height: 44px; padding: 6px 12px; font-size: 24px; line-height: 1; }
 .focus-mode span { margin: 0; }
-.focus-exit, .focus-reveal { position: fixed; z-index: 9; top: max(6px, env(safe-area-inset-top, 0px)); right: max(8px, env(safe-area-inset-right, 0px)); min-height: 44px; border: 1px solid var(--line); background: #faf9f4; color: var(--ink); border-radius: 999px; }
-.focus-reveal { width: 44px; font-size: 24px; opacity: 0; }
-.focus-reveal:hover, .focus-reveal:focus-visible { opacity: 1; }
-.focus-exit { padding: 8px 16px; opacity: 0; pointer-events: none; transform: translateY(-130%); transition: opacity .2s, transform .2s; }
-.focus-controls-visible .focus-exit, .focus-exit:focus { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.focus-exit { position: fixed; z-index: 9; top: env(safe-area-inset-top, 0px); right: max(8px, env(safe-area-inset-right, 0px)); display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: var(--ink); border-radius: 6px; }
+.focus-exit:hover { background: #e9ecdf; }
+.game-result { position: fixed; z-index: 10; top: 50%; left: 50%; transform: translate(-50%, -50%); width: max-content; max-width: calc(100% - 32px); padding: 28px 36px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); color: var(--ink); box-shadow: 0 12px 60px #14291f55; font-size: clamp(22px, 4vw, 36px); font-weight: 600; text-align: center; pointer-events: none; }
 html:has(body.game-focus) { overflow: hidden; overscroll-behavior: none; }
 body.game-focus { width: 100%; height: 100dvh; overflow: hidden; overscroll-behavior: none; padding: 0; }
 body.game-focus > .masthead,
@@ -215,7 +213,7 @@ body.game-focus .game { position: fixed; inset: 0; width: 100%; height: 100dvh; 
 body.game-focus .play-layout { height: 100%; padding: 0; }
 body.game-focus .board-section { height: 100%; min-height: 0; display: flex; flex-direction: column; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
 /* Counts take one small row; the grid uses every remaining pixel. */
-body.game-focus .board-heading { position: static; flex: 0 0 28px; min-height: 0; margin: 0; justify-content: center; pointer-events: none; }
+body.game-focus .board-heading { position: static; flex: 0 0 44px; min-height: 0; margin: 0; justify-content: center; pointer-events: none; }
 body.game-focus .scores { margin: 0; gap: 20px; padding: 0; }
 body.game-focus .scores strong { font-size: 22px; }
 body.game-focus .board { flex: 1 1 0; width: 100%; height: auto; aspect-ratio: auto; min-height: 0; overflow: hidden; container-type: size; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(5, minmax(0, 1fr)); gap: 2px; }
