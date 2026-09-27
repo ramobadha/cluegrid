@@ -31,17 +31,19 @@ test('100 seeds each produce 25 distinct cards and the correct team distribution
     assert.equal(count('neutral'), 7); assert.equal(count('assassin'), 1);
   }
 });
-test('correct guesses retain the turn; civilians and opposing agents switch it', () => {
-  const state = fresh();
-  assert.equal(Game.reveal(board, state, board.cards.findIndex(c => c.team === state.turn)).turn, state.turn);
-  for (const team of ['neutral', state.turn === 'red' ? 'blue' : 'red']) {
-    assert.notEqual(Game.reveal(board, state, board.cards.findIndex(c => c.team === team)).turn, state.turn);
+test('reveals count either team without tracking turns', () => {
+  let state = { revealed: [], winner: null };
+  for (const team of ['red', 'neutral', 'blue']) {
+    const index = board.cards.findIndex(c => c.team === team);
+    state = Game.reveal(board, state, index);
+    assert.ok(state.revealed.includes(index));
+    assert.equal(state.turn, undefined);
+    assert.equal(state.winner, null);
   }
 });
-test('assassin loses the current team; finished games reject further guesses', () => {
-  const state = fresh();
-  const result = Game.reveal(board, state, board.cards.findIndex(c => c.team === 'assassin'));
-  assert.equal(result.winner, state.turn === 'red' ? 'blue' : 'red');
+test('assassin ends play without assigning a winner to an untracked turn', () => {
+  const result = Game.reveal(board, fresh(), board.cards.findIndex(c => c.team === 'assassin'));
+  assert.equal(result.winner, 'assassin');
   assert.equal(Game.reveal(board, result, 0), result);
 });
 test('all agents revealed wins, duplicate and invalid guesses do nothing', () => {

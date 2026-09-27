@@ -32,12 +32,6 @@ def check_layout(page, width, height):
     assert page.locator('#main-language').evaluate('e => e.getBoundingClientRect().height') >= 43.5
     assert page.locator('#meaning-language').evaluate('e => e.getBoundingClientRect().height') >= 43.5
     assert float(page.locator('#seed').evaluate('e => getComputedStyle(e).fontSize').replace('px', '')) >= 16
-    if width <= 900:
-        assert page.locator('.mobile-turnbar').is_visible()
-        page.locator('#reset').scroll_into_view_if_needed()
-        reset_bottom = page.locator('#reset').bounding_box()['y'] + page.locator('#reset').bounding_box()['height']
-        dock_top = page.locator('.mobile-turnbar').bounding_box()['y']
-        assert reset_bottom <= dock_top + 1, (width, height, 'dock hides restart')
 
 
 with sync_playwright() as p:
@@ -69,7 +63,7 @@ with sync_playwright() as p:
         page.locator('#focus-mode').tap()
         page.wait_for_function("document.body.classList.contains('game-focus')")
         assert page.locator('#seed-form').is_hidden()
-        assert page.locator('.mobile-turnbar').is_visible() or page.locator('#end-turn').is_visible()
+        assert page.locator('.scores').is_visible()
         assert page.locator('#focus-exit').is_visible()
         assert page.locator('.card').count() == 25
         page.locator('#focus-exit').tap()
@@ -86,21 +80,16 @@ with sync_playwright() as p:
         page.locator('.card').first.tap()
         page.get_by_role('button', name='Reveal card', exact=True).tap()
         assert page.locator('.revealed').count() == 1
-        assert page.locator('#mobile-red').inner_text() == page.locator('#red-score').inner_text()
-        assert page.locator('#mobile-blue').inner_text() == page.locator('#blue-score').inner_text()
+        assert page.locator('#red-score').is_visible()
+        assert page.locator('#blue-score').is_visible()
         page.locator('#reset').tap()
         page.get_by_role('button', name='Restart board', exact=True).tap()
-        turn = page.locator('#mobile-turn').inner_text()
-        page.locator('#mobile-end-turn').tap()
-        assert page.locator('#mobile-turn').inner_text() != turn
         page.locator('#spymaster').tap()
         page.get_by_role('button', name='Show key', exact=True).tap()
-        assert page.locator('#mobile-end-turn').is_disabled()
         assert page.locator('.card.assassin').count() == 1
         for width, height in [(320, 568), (390, 844), (667, 375)]:
             check_layout(page, width, height)
         page.locator('#player').tap()
-        assert page.locator('#mobile-end-turn').is_enabled()
 
         # The two language selectors swap roles without changing the seeded board.
         gujarati_words = page.locator('.term').all_text_contents()

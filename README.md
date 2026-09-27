@@ -17,7 +17,7 @@ Optional browser checks require Playwright (`python -m pip install --target .tes
 
 ## Mobile play
 
-The five-column board adapts to narrow phones, large phones, tablets, and landscape screens. On phones, a fixed bottom bar keeps the current turn, remaining agents, and End turn within reach. Controls have at least 44-pixel tap targets, seed fields use 16-pixel text, and pinch zoom remains enabled. Confirmation sheets show the selected term at a larger size with its translation when translations are enabled. Screen cutouts and bottom safe areas have dedicated spacing. Display and language preferences persist on the device.
+The five-column board adapts to narrow phones, large phones, tablets, and landscape screens. Red and blue counts above the grid show remaining words; players manage turns themselves. The swap button between the language selectors exchanges the word and meaning languages without changing progress or the active view. Controls have at least 44-pixel tap targets, seed fields use 16-pixel text, and pinch zoom remains enabled. Confirmation sheets show the selected term at a larger size with its translation when translations are enabled. Screen cutouts and bottom safe areas have dedicated spacing. Display and language preferences persist on the device.
 
 Share game opens the native share sheet when supported on touch devices, otherwise copies the link or displays it for manual copying. Native sharing and clipboard availability depend on the browser and whether the site is served over HTTPS; the manual fallback also works on local HTTP.
 
@@ -32,7 +32,7 @@ python tests/mobile.py
 
 ## Play
 
-Share the seed or invite URL. Everyone using the same seed and vocabulary version gets identical words and team keys. Each device tracks its own guesses: this is not a realtime multiplayer server. Use one shared guesser screen or mirror guesses manually. Spymasters view the key on a separate screen. Clues are spoken; players enforce the clue-number guess limit. Wrong guesses switch turns, the assassin ends the game, and finding every agent wins. Refresh restores local progress; Restart clears it. Spymaster visibility always resets on refresh. Once the seed and languages are set, select the ⛶ button beside New game for a focused play screen; use Exit full screen or the Escape key to return to setup.
+Share the seed or invite URL. Everyone using the same seed and vocabulary version gets identical words and team keys. Each device tracks its own guesses: this is not a realtime multiplayer server. Use one shared guesser screen or mirror guesses manually. Spymasters view the key on a separate screen. Clues are spoken; players enforce the clue-number guess limit. Players handle turn changes aloud; the assassin ends the game, and finding every agent wins. Refresh restores local progress; Restart clears it. Spymaster visibility always resets on refresh. Once the seed and languages are set, select the ⛶ button beside New game for native fullscreen with just the grid and counts. The exit button hides after a short delay; move the pointer to the top edge, tap the small ellipsis, or tab to the exit button to reveal it. Escape also exits. If the browser blocks fullscreen, a message explains how to open the page directly or use F11 on desktop.
 
 ## Seeding
 

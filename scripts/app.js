@@ -42,7 +42,7 @@
     try { localStorage.setItem('kodenames:preferences', JSON.stringify({ meanings: $('meanings').checked, confirm: $('confirm').checked, mainLanguage, meaningLanguage })); }
     catch { /* Preferences are optional; gameplay still works without storage. */ }
   }
-  const freshState = () => ({ revealed: [], turn: board.startingTeam, winner: null });
+  const freshState = () => ({ revealed: [], winner: null });
   const storageKey = () => `kodenames:${version}:${seed}`;
   function save() {
     try { localStorage.setItem(storageKey(), JSON.stringify({ history })); }
@@ -60,7 +60,7 @@
         if (Array.isArray(saved?.history)) {
           for (const action of saved.history.slice(0, 1000)) {
             if (state.winner) break;
-            if (action === 'end') state.turn = state.turn === 'red' ? 'blue' : 'red';
+            if (action === 'end') continue; // Older saves included manual turn changes.
             else if (Number.isInteger(action) && action >= 0 && action < 25) state = Game.reveal(board, state, action);
             else continue;
             history.push(action);
@@ -73,7 +73,7 @@
     url.searchParams.set('lang', mainLanguage); url.searchParams.set('meaning', meaningLanguage);
     window.history.replaceState(null, '', url);
     render();
-    $('status').textContent = `Seed “${seed}” · ${title(board.startingTeam)} starts. Share this seed to get the same board. Moves stay on this device.`;
+    $('status').textContent = `Seed “${seed}” · Share this seed to get the same board. Moves stay on this device.`;
   }
   function render() {
     const active = document.activeElement?.dataset?.index;
@@ -103,27 +103,18 @@
     if (active !== undefined) $('board').querySelector(`[data-index="${active}"]`)?.focus();
     ['red', 'blue'].forEach(team => {
       $(`${team}-score`).textContent = Game.remaining(board, state.revealed, team);
-      document.querySelector(`.team-score.${team}`).classList.toggle('active', !state.winner && state.turn === team);
+      $(`${team}-score`).setAttribute('aria-label', `${title(team)}: ${Game.remaining(board, state.revealed, team)} words remaining`);
     });
-    $('turn-heading').textContent = state.winner ? `${title(state.winner)} team wins!` : `${title(state.turn)} team's turn`;
-    $('turn-description').textContent = state.winner ? 'Mission complete. Start a new game to play again.' : 'Listen to your spymaster. Find your agents.';
-    $('end-turn').disabled = !!state.winner || spy;
-    $('mobile-end-turn').disabled = !!state.winner || spy;
-    $('mobile-turn').textContent = spy ? 'Spymaster view' : $('turn-heading').textContent;
-    $('mobile-red').textContent = $('red-score').textContent;
-    $('mobile-blue').textContent = $('blue-score').textContent;
-    document.querySelector('.mobile-turnbar').dataset.team = state.winner || state.turn;
     $('player').setAttribute('aria-pressed', String(!spy)); $('spymaster').setAttribute('aria-pressed', String(spy));
     $('spy-notice').hidden = !spy;
     $('mode-caption').textContent = spy ? 'SPYMASTER VIEW' : 'PLAYER VIEW';
-    document.querySelector('.mission-label span').textContent = `${String(state.revealed.length).padStart(2, '0')} / 25`;
   }
   function reveal(index) {
     const next = Game.reveal(board, state, index);
     if (next === state || spy) return;
     state = next; history.push(index); render();
     const card = board.cards[index];
-    $('status').textContent = `${card.translations[meaningLanguage]}: ${card.team === 'neutral' ? 'civilian' : card.team}. ${state.winner ? `${title(state.winner)} team wins!` : `${title(state.turn)} team's turn.`}`;
+    $('status').textContent = `${card.translations[meaningLanguage]}: ${card.team === 'neutral' ? 'civilian' : card.team}. ${state.winner === 'assassin' ? 'Assassin revealed. Game over.' : state.winner ? `${title(state.winner)} team wins!` : ''}`;
     save();
   }
   function ask(heading, message, actionLabel, action, gujarati = false, meaning = '') {
@@ -154,7 +145,7 @@
     if (history.length && !state.winner) ask('Start a new game?', 'Your current game is saved on this device. You can return using its seed.', 'New game', start);
     else start();
   };
-  $('reset').onclick = () => ask('Restart this board?', 'This clears all guesses and returns to the starting team. Words and the key stay the same.', 'Restart board', () => { load(seed, false); save(); });
+  $('reset').onclick = () => ask('Restart this board?', 'This clears all guesses. Words and the key stay the same.', 'Restart board', () => { load(seed, false); save(); });
   $('player').onclick = () => { spy = false; render(); };
   $('spymaster').onclick = () => {
     if (!spy) ask('For spymasters only', 'This reveals every card’s identity. Make sure guessers cannot see your screen.', 'Show key', () => { spy = true; render(); });
@@ -165,7 +156,7 @@
     if (meaningLanguage === mainLanguage) meaningLanguage = previous;
     $('meaning-language').value = meaningLanguage;
     document.documentElement.lang = mainLanguage;
-    savePreferences(); load(seed);
+    applyLanguages();
   };
   $('meaning-language').onchange = () => {
     const selected = $('meaning-language').value;
@@ -173,40 +164,70 @@
     meaningLanguage = selected;
     $('main-language').value = mainLanguage;
     document.documentElement.lang = mainLanguage;
-    savePreferences(); load(seed);
+    applyLanguages();
   };
   $('meanings').onchange = () => { savePreferences(); render(); };
   $('confirm').onchange = savePreferences;
-  $('end-turn').onclick = () => {
-    if (state.winner || spy) return;
-    state.turn = state.turn === 'red' ? 'blue' : 'red'; history.push('end'); render();
-    $('status').textContent = `${title(state.turn)} team's turn. Ask your spymaster for a new clue.`; save();
+  function applyLanguages() {
+    $('main-language').value = mainLanguage;
+    $('meaning-language').value = meaningLanguage;
+    document.documentElement.lang = mainLanguage;
+    const url = new URL(location.href);
+    url.searchParams.set('lang', mainLanguage);
+    url.searchParams.set('meaning', meaningLanguage);
+    window.history.replaceState(null, '', url);
+    savePreferences(); render();
+  }
+  $('swap-languages').onclick = () => {
+    [mainLanguage, meaningLanguage] = [meaningLanguage, mainLanguage];
+    applyLanguages();
   };
-  $('mobile-end-turn').onclick = () => $('end-turn').click();
+  let controlsTimer;
+  const fullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+  function showFocusControls() {
+    if (!document.body.classList.contains('game-focus')) return;
+    document.body.classList.add('focus-controls-visible');
+    clearTimeout(controlsTimer);
+    controlsTimer = setTimeout(() => document.body.classList.remove('focus-controls-visible'), 2200);
+  }
   function updateFocusMode(enabled) {
     document.body.classList.toggle('game-focus', enabled);
+    document.body.classList.remove('focus-controls-visible');
+    clearTimeout(controlsTimer);
     $('focus-exit').hidden = !enabled;
-    $('focus-mode').setAttribute('aria-label', enabled ? 'Exit full screen game view' : 'Enter full screen game view');
+    $('focus-reveal').hidden = !enabled;
     $('focus-mode').setAttribute('aria-pressed', String(enabled));
+    if (enabled) {
+      $('focus-mode').blur();
+      showFocusControls();
+    } else $('focus-mode').focus({ preventScroll: true });
   }
   $('focus-mode').onclick = async () => {
-    if (document.body.classList.contains('game-focus')) {
-      if (document.fullscreenElement && document.exitFullscreen) {
-        try { await document.exitFullscreen(); } catch { updateFocusMode(false); }
-      } else updateFocusMode(false);
-      return;
-    }
-    updateFocusMode(true);
+    const root = document.documentElement;
     try {
-      if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
-    } catch { /* Keep the focused game layout when native fullscreen is unavailable. */ }
+      if (root.requestFullscreen) await root.requestFullscreen({ navigationUI: 'hide' });
+      else if (root.webkitRequestFullscreen) await root.webkitRequestFullscreen();
+      else throw new Error('Fullscreen unavailable');
+      updateFocusMode(!!fullscreenElement());
+    } catch {
+      updateFocusMode(false);
+      $('status').textContent = 'Fullscreen is unavailable or blocked. Open this page directly in Chrome and allow fullscreen. On desktop, F11 also hides browser tabs.';
+      $('status').scrollIntoView({ block: 'nearest' });
+    }
   };
   $('focus-exit').onclick = async () => {
-    if (document.fullscreenElement && document.exitFullscreen) {
-      try { await document.exitFullscreen(); } catch { updateFocusMode(false); }
-    } else updateFocusMode(false);
+    try {
+      if (document.exitFullscreen) await document.exitFullscreen();
+      else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
+    } catch { showFocusControls(); }
   };
-  document.addEventListener('fullscreenchange', () => updateFocusMode(!!document.fullscreenElement));
+  $('focus-reveal').onclick = showFocusControls;
+  document.addEventListener('pointermove', event => {
+    if (event.clientY < 48) showFocusControls();
+  });
+  for (const event of ['fullscreenchange', 'webkitfullscreenchange']) {
+    document.addEventListener(event, () => updateFocusMode(!!fullscreenElement()));
+  }
   $('share').onclick = async () => {
     if (navigator.share && window.matchMedia('(pointer: coarse)').matches) {
       try {
@@ -223,7 +244,7 @@
   };
   $('help').onclick = () => {
     $('modal-title').textContent = 'One clue. Make it count.';
-    $('modal-content').innerHTML = '<ol><li>Split into red and blue teams. Pick one spymaster for each team. Share the invite link so everyone has the same board.</li><li>Spymasters open the key privately. The starting team has 9 agents; the other has 8.</li><li>Give a one-word clue and a number, such as “Nature, 3”. Say clues aloud or over your call. Do not use a word visible on the board.</li><li>Guessers select words. A correct agent lets you keep guessing, up to the clue number plus one. Enforce this limit together, then choose End turn.</li><li>A civilian or opposing agent ends your turn. Reveal the assassin and your team loses. Find all your agents to win.</li></ol><p>English meanings can be hidden for an extra challenge. Seed links share the initial board, not live moves. Each device tracks its own progress. Spymaster view is a trust-based screen, not a private account.</p>';
+    $('modal-content').innerHTML = '<ol><li>Split into red and blue teams. Pick one spymaster for each team. Share the invite link so everyone has the same board.</li><li>Spymasters open the key privately. The starting team has 9 agents; the other has 8.</li><li>Give a one-word clue and a number, such as “Nature, 3”. Say clues aloud or over your call. Do not use a word visible on the board.</li><li>Guessers select words. A correct agent lets you keep guessing, up to the clue number plus one. Keep track of turns together; the board only counts remaining words.</li><li>A civilian or opposing agent ends your turn. Reveal the assassin and your team loses. Find all your agents to win.</li></ol><p>English meanings can be hidden for an extra challenge. Seed links share the initial board, not live moves. Each device tracks its own progress. Spymaster view is a trust-based screen, not a private account.</p>';
     $('modal-actions').replaceChildren(); $('modal').showModal();
   };
   load(params.get('seed') || String(crypto.getRandomValues(new Uint32Array(1))[0]));

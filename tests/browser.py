@@ -24,10 +24,15 @@ with sync_playwright() as p:
     assert page.locator('.toolbar').is_hidden()
     assert page.locator('.card').count() == 25
     assert page.locator('#seed').input_value() == 'namaste'
+    assert page.evaluate('!!document.fullscreenElement')
+    page.mouse.move(500, 500)
+    page.wait_for_timeout(2500)
+    assert page.locator('#focus-exit').evaluate('e => getComputedStyle(e).opacity') == '0'
+    page.locator('#focus-reveal').click()
     page.locator('#focus-exit').click()
     page.wait_for_function("!document.body.classList.contains('game-focus')")
     assert page.locator('.toolbar').is_visible()
-    page.locator('#main-language').select_option('en')
+    page.locator('#swap-languages').click()
     assert page.locator('#main-language').input_value() == 'en'
     assert page.locator('#meaning-language').input_value() == 'gu'
     assert page.locator('.term').all_text_contents() == english_meanings
@@ -60,15 +65,16 @@ with sync_playwright() as p:
     page.locator('#spymaster').click()
     page.get_by_role('button', name='Show key', exact=True).click()
     assert page.locator('.card.assassin').count() == 1
-    assert page.locator('#end-turn').is_disabled()
+    page.locator('#swap-languages').click()
+    assert page.locator('#spymaster').get_attribute('aria-pressed') == 'true'
+    assert page.locator('.revealed').count() == 1
+    page.locator('#swap-languages').click()
     page.locator('#player').click()
     assert page.locator('.card:not(.revealed).red,.card:not(.revealed).blue,.card:not(.revealed).assassin').count() == 0
     page.locator('#reset').click(); page.get_by_role('button', name='Restart board', exact=True).click()
     assert page.locator('.revealed').count() == 0
     assert terms == page.locator('.term').all_text_contents()
-    before = page.locator('#turn-heading').inner_text()
-    page.locator('#end-turn').click()
-    assert before != page.locator('#turn-heading').inner_text()
+    assert page.locator('#end-turn, #turn-heading, #mobile-end-turn').count() == 0
     page.locator('#help').click(); assert page.locator('#modal').is_visible()
     page.keyboard.press('Escape')
     page.locator('#seed').fill('  TEST-SEED  '); page.locator('#seed').press('Enter')
@@ -94,10 +100,9 @@ with sync_playwright() as p:
     legacy_terms = page.locator('.term').all_text_contents()
     expected = page.evaluate("Game.generate('namaste', GUJARATI_WORD_BANKS['gu-v1'], Math.seedrandom).cards.map(c => c.term)")
     assert legacy_terms == expected
-    page.locator('#end-turn').click()
-    saved_turn = page.locator('#turn-heading').inner_text()
+    page.evaluate("localStorage.setItem('kodenames:gu-v1:namaste', JSON.stringify({history: ['end', 0]}))")
     page.reload(); page.wait_for_load_state('load')
-    assert page.locator('#turn-heading').inner_text() == saved_turn
+    assert page.locator('.revealed').count() == 1
     page.locator('#new-game').click()
     page.locator('#modal-actions').get_by_role('button', name='New game', exact=True).click()
     assert 'v=gu-v2' in page.url
@@ -105,7 +110,7 @@ with sync_playwright() as p:
     page.goto(f'{base_url}/?seed=namaste&v=gu-v1')
     page.wait_for_load_state('load')
     assert page.locator('.term').all_text_contents() == legacy_terms
-    assert page.locator('#turn-heading').inner_text() == saved_turn
+    assert page.locator('.revealed').count() == 1
 
     # Exercise the real renderer with the longest entries, not just a fortunate random seed.
     page.goto(f'{base_url}/?seed=long-word-layout&v=gu-v2')

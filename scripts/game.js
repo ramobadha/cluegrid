@@ -26,10 +26,10 @@
     if (state.winner || state.revealed.includes(index) || !Number.isInteger(index) || !board.cards[index]) return state;
     const next = { ...state, revealed: [...state.revealed, index] };
     const team = board.cards[index].team;
-    if (team === 'assassin') next.winner = state.turn === 'red' ? 'blue' : 'red';
+    // Turns are managed by the players, so an assassin ends play without guessing who chose it.
+    if (team === 'assassin') next.winner = 'assassin';
     else if (!api.remaining(board, next.revealed, 'red')) next.winner = 'red';
     else if (!api.remaining(board, next.revealed, 'blue')) next.winner = 'blue';
-    else if (team !== state.turn) next.turn = state.turn === 'red' ? 'blue' : 'red';
     return next;
   };
   if (typeof module === 'object') module.exports = api;

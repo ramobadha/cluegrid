@@ -180,42 +180,52 @@ dialog .dialog-meaning { font-size: 17px; text-align: center; margin: 0; }
   dialog .dialog-word { margin-top: 12px; }
 }
 
-/* A focused table view hides setup and reading material while keeping play controls. */
+/* The board and its two counts share the full available width. */
+.play-layout { display: block; }
+.board-heading { flex-wrap: wrap; gap: 12px; }
+.scores { display: flex; align-items: center; gap: 24px; margin-right: auto; }
+.scores strong { font-size: 34px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; }
+.scores .red { color: var(--red); }
+.scores .blue { color: var(--blue); }
+.board-foot { flex-wrap: wrap; }
+.board-foot .reset { margin: 0; }
+.language-swap { border: 1px solid var(--line); border-radius: 50%; background: transparent; min-width: 44px; min-height: 44px; font-size: 24px; }
+.language-swap:hover { background: #e9ecdf; }
+body { padding-bottom: 0; }
 .focus-mode { min-width: 48px; min-height: 44px; padding: 6px 12px; font-size: 24px; line-height: 1; }
-.focus-exit { position: fixed; z-index: 9; top: max(8px, env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); min-height: 42px; padding: 8px 14px; border: 1px solid #cdd4c5; border-radius: 999px; background: #faf9f4; color: var(--ink); box-shadow: 0 3px 14px #15281f20; font-size: 13px; font-weight: 600; }
-.focus-exit span { margin-right: 5px; font-size: 18px; }
-body.game-focus { min-height: 100dvh; overflow: hidden; padding: 0; }
+.focus-mode span { margin: 0; }
+.focus-exit, .focus-reveal { position: fixed; z-index: 9; top: max(6px, env(safe-area-inset-top, 0px)); right: max(8px, env(safe-area-inset-right, 0px)); min-height: 44px; border: 1px solid var(--line); background: #faf9f4; color: var(--ink); border-radius: 999px; }
+.focus-reveal { width: 44px; font-size: 24px; opacity: .45; }
+.focus-reveal:hover, .focus-reveal:focus-visible { opacity: 1; }
+.focus-exit { padding: 8px 16px; opacity: 0; pointer-events: none; transform: translateY(-130%); transition: opacity .2s, transform .2s; }
+.focus-controls-visible .focus-exit, .focus-exit:focus { opacity: 1; pointer-events: auto; transform: translateY(0); }
+body.game-focus { height: 100dvh; overflow: hidden; padding: 0; }
 body.game-focus > .masthead,
-body.game-focus main > .intro,
+body.game-focus .intro,
 body.game-focus .toolbar,
 body.game-focus .language-bar,
 body.game-focus .status,
-body.game-focus footer { display: none !important; }
-body.game-focus main { width: 100%; max-width: none; height: 100dvh; margin: 0; padding: 0; }
-body.game-focus .game { height: 100%; min-height: 100%; overflow: auto; border: 0; border-radius: 0; box-shadow: none; padding-top: 52px; }
-body.game-focus .play-layout { min-height: calc(100% - 52px); }
-body.game-focus .sidebar .mission-label,
-body.game-focus .sidebar h2,
-body.game-focus .sidebar > p,
-body.game-focus .sidebar .field-note,
-body.game-focus .sidebar .reset { display: none !important; }
+body.game-focus footer,
 body.game-focus .board-foot,
-body.game-focus .board-heading > .toggle { display: none !important; }
-body.game-focus .focus-exit { display: block; }
-body.game-focus .mobile-turnbar { z-index: 8; }
-
-@media (max-width: 900px), (max-height: 500px) and (pointer: coarse) {
-  body.game-focus { padding-bottom: 0; }
-  body.game-focus .game { padding-top: 50px; }
-  body.game-focus .play-layout { min-height: calc(100% - 50px); padding: 6px 8px 12px; }
-  body.game-focus .board-heading { margin-bottom: 4px; }
-  body.game-focus .board { gap: 4px; }
-  body.game-focus .card { min-height: clamp(42px, 10.5dvh, 82px); padding: 18px 3px 5px; }
-  body.game-focus .card .term { font-size: clamp(13px, 4.5vw, 20px); }
-  body.game-focus .card.long-word .term { font-size: clamp(11px, 3.8vw, 17px); }
-  body.game-focus .card .meaning { font-size: clamp(9px, 2.7vw, 12px); }
-  body.game-focus .sidebar { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 4px 0 0; border: 0; }
-  body.game-focus .sidebar .team-score { min-height: 46px; margin: 0; padding: 7px 9px; }
-  body.game-focus .sidebar .end-turn { display: none; }
-  body.game-focus .mobile-turnbar { padding-top: 7px; padding-bottom: calc(7px + env(safe-area-inset-bottom, 0px)); }
+body.game-focus .board-heading > :not(.scores) { display: none !important; }
+body.game-focus main { width: 100%; max-width: none; height: 100dvh; margin: 0; padding: 0; }
+body.game-focus .game { height: 100%; border: 0; border-radius: 0; box-shadow: none; }
+body.game-focus .play-layout { height: 100%; padding: max(6px, env(safe-area-inset-top, 0px)) max(8px, env(safe-area-inset-right, 0px)) max(8px, env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
+body.game-focus .board-section { height: 100%; display: flex; flex-direction: column; }
+body.game-focus .board-heading { flex: 0 0 44px; margin: 0 48px 6px; justify-content: center; }
+body.game-focus .scores { margin: 0; gap: 32px; }
+body.game-focus .scores strong { font-size: 30px; }
+body.game-focus .spy-notice { margin: 0 0 4px; padding: 4px; }
+body.game-focus .board { flex: 1; min-height: 0; grid-template-rows: repeat(5, minmax(0, 1fr)); gap: clamp(4px, 1vmin, 12px); }
+body.game-focus .card { min-height: 0; padding: 16px 4px 4px; overflow: hidden; }
+body.game-focus .card .term { font-size: clamp(13px, min(3vw, 4dvh), 42px); line-height: 1.45; }
+body.game-focus .card.long-word .term { font-size: clamp(11px, min(2.5vw, 3.4dvh), 34px); }
+body.game-focus .card .meaning { font-size: clamp(9px, min(1.4vw, 2dvh), 20px); line-height: 1.3; }
+body.game-focus .card .identity { position: absolute; top: 3px; right: 5px; margin: 0; font-size: 8px; }
+body.game-focus .card .number { top: 3px; font-size: 8px; }
+@media (max-height: 450px) {
+  body.game-focus .board-heading { flex-basis: 30px; margin-bottom: 2px; }
+  body.game-focus .scores strong { font-size: 24px; }
+  body.game-focus .card { padding-top: 10px; }
+  body.game-focus .card .number, body.game-focus .card .identity { font-size: 6px; }
 }
