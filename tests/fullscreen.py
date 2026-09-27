@@ -15,7 +15,7 @@ with sync_playwright() as p:
         page.locator('#focus-mode').click()
         page.wait_for_function('!!document.fullscreenElement')
         box = page.locator('#board').bounding_box()
-        assert abs(box['width'] / box['height'] - 16 / 9) < .01, box
+        assert abs(box['width'] / box['height'] - 21 / 9) < .01, box
         assert box['width'] <= min(width, 1200) and box['height'] <= height, box
         assert abs(box['x'] * 2 + box['width'] - width) < 1, box
         assert abs(box['y'] * 2 + box['height'] - height) < 1, box
