@@ -238,44 +238,39 @@ body.game-focus .card .number { top: 3px; font-size: 8px; }
   body:not(.game-focus) .card { min-height: 0; }
 }
 
-/* Compact control shelves keep the same controls within reach in either view. */
-.board-heading { justify-content: flex-start; gap: 10px 18px; margin-bottom: 8px; }
-.board-heading .scores { gap: 18px; }
+/* One compact row; narrow screens can scroll it without moving the grid. */
+.board-heading { flex-wrap: nowrap; justify-content: flex-start; gap: 10px; margin-bottom: 10px; overflow-x: auto; scrollbar-width: thin; }
+.board-heading > * { flex-shrink: 0; }
+.board-heading .scores { gap: 12px; margin-right: auto; }
+.board-heading .scores strong { font-size: 26px; }
 .board-heading .toggle { white-space: nowrap; }
-.board-heading .focus-mode { margin-left: auto; }
-.board-section > .language-bar { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 8px 12px; padding: 8px 0 12px; margin-bottom: 12px; background: transparent; }
-.board-section > .language-bar label { flex-direction: row; align-items: center; font-size: 8px; }
-.board-section > .language-bar select { min-width: 0; width: 150px; }
-.board-section > .language-bar #share { margin-left: auto; white-space: nowrap; }
-.card.synced-reveal { color: var(--ink); border-style: dashed; box-shadow: none; }
+.board-heading .view-switch button { padding-inline: 12px; }
+.board-heading .focus-mode { margin-left: 0; }
+.board-heading .language-swap, .board-heading .icon-control { display: grid; place-items: center; min-width: 44px; width: 44px; height: 44px; padding: 0; border-radius: 6px; }
+.compact-label { display: none; }
+.card.synced-reveal { color: #000; border-style: dashed; box-shadow: none; }
 .card.synced-reveal.red { background: rgb(172 70 59 / 22%); border-color: #a5423780; }
 .card.synced-reveal.blue { background: rgb(53 111 141 / 22%); border-color: #356f8d80; }
 .card.synced-reveal.neutral { background: rgb(216 198 165 / 28%); border-color: #b8a78480; }
 .card.synced-reveal.assassin { background: rgb(48 57 54 / 22%); border-color: #30393680; }
-.card.synced-reveal .meaning, .card.synced-reveal .number { color: #485647; }
-body.game-focus .board-heading { gap: 4px 12px; padding: 2px 56px 2px 10px; justify-content: flex-start; }
-body.game-focus .scores { margin-right: auto; gap: 12px; flex-wrap: wrap; }
+.card.synced-reveal .meaning, .card.synced-reveal .number { color: #000; }
+body.game-focus .board-heading { flex: 0 0 48px; min-height: 48px; gap: 10px; padding: 2px 4px; margin: 0 52px 0 4px; justify-content: flex-start; }
+body.game-focus .scores { margin-right: auto; gap: 10px; }
 body.game-focus .board-heading .focus-mode { display: none; }
-body.game-focus .board-section > .language-bar { flex: 0 0 auto; gap: 6px 10px; padding: 2px 10px 6px; margin: 0; }
-body.game-focus .language-bar label { font-size: 0; gap: 0; }
-body.game-focus .language-bar select { width: 140px; font-size: 12px; }
 body.game-focus .view-switch { padding: 0; }
 body.game-focus .view-switch button { padding: 6px 10px; font-size: 12px; }
 body.game-focus .toggle { font-size: 11px; }
-body.game-focus #share { padding: 6px 10px; min-height: 44px; font-size: 12px; }
+body.game-focus #share { padding: 0; min-height: 44px; }
 @media (max-width: 600px) {
-  .board-heading { gap: 4px 10px; }
-  .board-heading .scores { gap: 10px; }
-  .board-heading .scores strong { font-size: 26px; }
-  .board-section > .language-bar { gap: 6px; }
-  .board-section > .language-bar label { flex: 1; flex-direction: column; align-items: stretch; gap: 3px; }
-  .board-section > .language-bar select { width: 100%; font-size: 12px; }
-  .board-section > .language-bar #share { margin-left: 0; }
-  .board-section > .language-bar #share span { display: none; }
-  body.game-focus .board-heading { padding-right: 54px; gap: 0 8px; }
-  body.game-focus .board-heading .scores { gap: 8px; }
-  body.game-focus .room-status { font-size: 9px; }
-  body.game-focus .language-bar select { width: 100%; padding-left: 5px; font-size: 11px; }
-  body.game-focus .board-section > .language-bar { gap: 4px; padding-inline: 5px; }
-  body.game-focus .language-swap { min-width: 36px; }
+  .board-heading, body.game-focus .board-heading { gap: 4px; }
+  .board-heading .scores, body.game-focus .scores { gap: 6px; }
+  .board-heading .scores strong { font-size: 20px; }
+  .board-heading .view-switch { padding: 0; }
+  .board-heading .view-switch button, body.game-focus .view-switch button { padding-inline: 6px; font-size: 11px; }
+  .board-heading .toggle { gap: 3px; padding-inline: 0; font-size: 11px; }
+  .board-heading .control-label { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .board-heading .compact-label { display: inline; }
+  .board-heading .language-swap, .board-heading .icon-control { min-width: 36px; width: 36px; }
+  .board-heading .focus-mode { min-width: 36px; padding-inline: 6px; }
+  .board-heading .room-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 }

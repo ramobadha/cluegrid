@@ -15,7 +15,7 @@ with sync_playwright() as p:
         page.locator('#focus-mode').click()
         page.wait_for_function('!!document.fullscreenElement')
         box = page.locator('#board').bounding_box()
-        assert box['x'] == 0 and box['width'] == width and box['y'] >= 88, box
+        assert box['x'] == 0 and box['width'] == width and box['y'] == 48, box
         assert abs(box['y'] + box['height'] - height) < 1, box
         assert page.evaluate('document.documentElement.scrollHeight <= innerHeight')
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')

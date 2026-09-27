@@ -106,7 +106,7 @@
       const translation = card.translations[meaningLanguage];
       const button = document.createElement('button');
       button.className = `card${visible ? ` ${card.team}` : ''}${revealed ? ' revealed' : ''}`;
-      if (revealed && room && !room.hostKey) button.classList.add('synced-reveal');
+      if (revealed && (spy || (room && !room.hostKey))) button.classList.add('synced-reveal');
       if (word.length > 14) button.classList.add('long-word');
       button.dataset.index = index;
       button.disabled = revealed || !!state.winner || spy || joiningRoom || !!(room && (!room.hostKey || !room.connected || room.busy));
@@ -114,7 +114,8 @@
       const meaning = document.createElement('span'); meaning.className = 'meaning'; meaning.lang = meaningLanguage; meaning.textContent = translation; meaning.hidden = !$('meanings').checked;
       const number = document.createElement('span'); number.className = 'number'; number.textContent = String(index + 1).padStart(2, '0');
       const identity = document.createElement('span'); identity.className = 'identity';
-      identity.textContent = visible ? `${revealed ? '✓ ' : ''}${card.team === 'neutral' ? 'Civilian' : card.team}` : '';
+      identity.textContent = revealed ? '✓' : '';
+      if (revealed) identity.setAttribute('aria-label', 'Revealed');
       button.append(number, name, meaning, identity);
       button.addEventListener('click', () => {
         if ($('confirm').checked) ask('Reveal this word?', word, 'Reveal card', () => reveal(index), mainLanguage === 'gu', $('meanings').checked ? translation : '');

@@ -39,7 +39,7 @@ with sync_playwright() as p:
     assert 'lang=en' in page.url and 'meaning=gu' in page.url
     page.reload(); page.wait_for_load_state('load')
     assert page.locator('.term').all_text_contents() == english_meanings
-    page.locator('#meaning-language').select_option('en')
+    page.locator('#swap-languages').click()
     assert page.locator('#main-language').input_value() == 'gu'
     assert page.locator('#meaning-language').input_value() == 'en'
     assert page.locator('.term').all_text_contents() == gujarati_terms
@@ -64,6 +64,10 @@ with sync_playwright() as p:
     page.locator('#spymaster').click()
     page.get_by_role('button', name='Show key', exact=True).click()
     assert page.locator('.card.assassin').count() == 1
+    assert page.locator('.revealed.synced-reveal').count() == 1
+    assert page.locator('.revealed .term').evaluate('e => getComputedStyle(e).color') == 'rgb(0, 0, 0)'
+    assert all(label in ['', '\u2713'] for label in page.locator('.identity').all_text_contents())
+    assert page.locator('.card:not(.revealed).synced-reveal').count() == 0
     page.locator('#swap-languages').click()
     assert page.locator('#spymaster').get_attribute('aria-pressed') == 'true'
     assert page.locator('.revealed').count() == 1
