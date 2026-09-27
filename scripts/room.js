@@ -14,7 +14,8 @@
     }
     async request(path, body, host = false) {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
+      // Free sync services may need a minute to wake up for the first room.
+      const timeout = setTimeout(() => controller.abort(), path === '' ? 90000 : 10000);
       try {
         const base = window.CLUEGRID_API_URL ? `${window.CLUEGRID_API_URL.replace(/\/$/, '')}/` : document.baseURI;
         const response = await fetch(new URL(`api/rooms${path}`, base), {

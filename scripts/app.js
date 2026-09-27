@@ -323,7 +323,7 @@
     }
     if (!room) {
       $('share').disabled = true;
-      $('status').textContent = 'Creating your private room…';
+      $('status').textContent = 'Creating your private room… The first connection may take a minute.';
       room = new RoomClient(applyRoomState, roomConnection);
       render();
       try { await room.create(roomGame()); }
