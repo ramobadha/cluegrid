@@ -5,6 +5,14 @@
   const params = new URLSearchParams(location.search);
   const invitedRoom = new URLSearchParams(location.hash.slice(1)).get('room');
   let room = null, roomRound = null, joiningRoom = !!invitedRoom;
+  let syncUnavailable = false;
+  let cachedRoom;
+  try {
+    const cached = JSON.parse(localStorage.getItem(`cluegrid:room-cache:${invitedRoom}`));
+    if (cached && typeof cached.seed === 'string' && Object.hasOwn(WORD_BANKS, cached.version)
+      && Array.isArray(cached.history) && cached.history.length <= 25
+      && cached.history.every(index => Number.isInteger(index) && index >= 0 && index < 25)) cachedRoom = cached;
+  } catch { /* A room can still open without cached progress. */ }
   let version = Object.hasOwn(WORD_BANKS, params.get('v')) ? params.get('v') : latestVersion;
   let seed, board, state, spy = false, history = [];
   let announcementTimer;
@@ -125,12 +133,18 @@
     for (const id of ['new-game', 'reset', 'seed']) $(id).disabled = readOnly;
     $('seed-form').querySelector('button').disabled = readOnly;
     $('leave-room').hidden = !room && !joiningRoom;
-    $('room-status').hidden = !room && !joiningRoom;
-    $('room-status').textContent = joiningRoom ? (room?.stopped ? 'Unavailable' : 'Joining…') : room ? `${room.hostKey ? 'Host' : 'Guest'} · ${room.connected ? 'Live' : 'Offline'}` : '';
+    $('room-status').hidden = !room && !joiningRoom && !syncUnavailable;
+    $('room-status').textContent = joiningRoom ? 'Joining…' : room ? `${room.hostKey ? 'Host' : 'Guest'} · Live` : syncUnavailable ? 'Local · No sync' : '';
   }
-  function reveal(index) {
+  async function roomAction(action, details, locally) {
+    const client = room, currentBoard = board;
+    if (!client) { locally(); return; }
+    const saved = await client.act(action, details);
+    if (!saved && !room && board === currentBoard) locally();
+  }
+  async function reveal(index) {
     if (joiningRoom || spy) return;
-    if (room) { room.act('reveal', { index }); return; }
+    if (room) { await roomAction('reveal', { index }, () => reveal(index)); return; }
     const next = Game.reveal(board, state, index);
     if (next === state || spy) return;
     state = next; history.push(index); render();
@@ -148,6 +162,16 @@
     return { seed: value, version: bank, teams: generated.cards.map(card => card.team), history: moves };
   }
   function roomConnection(connected, message = '') {
+    if (!connected && room) {
+      room.stop();
+      room = null; roomRound = null; joiningRoom = false; syncUnavailable = true;
+      const url = new URL(location.href); url.hash = '';
+      window.history.replaceState(null, '', url);
+      save();
+      $('status').textContent = 'Sync unavailable. Keep playing locally; moves stay on this device. Share game again to create a new live room.';
+      render();
+      return;
+    }
     if (message) $('status').textContent = message;
     else if (connected && room) $('status').textContent = state.winner
       ? (state.winner === 'assassin' ? 'Game over' : `Game over — ${title(state.winner)} team wins!`)
@@ -155,7 +179,17 @@
         : 'Live room. The host reveals cards for everyone.';
     render();
   }
+  function makeRoomClient() {
+    const client = new RoomClient(
+      (snapshot, first) => { if (room === client) applyRoomState(snapshot, first); },
+      (connected, message) => { if (room === client) roomConnection(connected, message); }
+    );
+    return client;
+  }
   function applyRoomState(snapshot, first) {
+    syncUnavailable = false;
+    try { localStorage.setItem(`cluegrid:room-cache:${room.id}`, JSON.stringify(snapshot)); }
+    catch { /* Cached room progress is optional. */ }
     const previousWinner = state.winner;
     const changedRound = roomRound !== snapshot.round;
     joiningRoom = false;
@@ -194,7 +228,7 @@
     if (next.trim().toLowerCase() === seed) return;
     if (joiningRoom) return;
     if (room) {
-      room.act('new', { game: roomGame(next.trim().toLowerCase().slice(0, 80), version, []) });
+      roomAction('new', { game: roomGame(next.trim().toLowerCase().slice(0, 80), version, []) }, () => load(next));
       return;
     }
     load(next);
@@ -204,7 +238,8 @@
     const start = () => {
       if (joiningRoom) return;
       if (room) {
-        room.act('new', { game: roomGame(String(crypto.getRandomValues(new Uint32Array(1))[0]), latestVersion, []) });
+        const nextSeed = String(crypto.getRandomValues(new Uint32Array(1))[0]);
+        roomAction('new', { game: roomGame(nextSeed, latestVersion, []) }, () => { version = latestVersion; load(nextSeed); });
         return;
       }
       version = latestVersion;
@@ -215,7 +250,7 @@
   };
   $('reset').onclick = () => ask('Restart this board?', room ? 'This clears guesses for everyone in the room. Words and the key stay the same.' : 'This clears all guesses. Words and the key stay the same.', 'Restart board', () => {
     if (joiningRoom) return;
-    if (room) { room.act('reset'); return; }
+    if (room) { roomAction('reset', {}, () => { load(seed, false); save(); }); return; }
     load(seed, false); save();
   });
   $('leave-room').onclick = () => {
@@ -324,17 +359,22 @@
     if (!room) {
       $('share').disabled = true;
       $('status').textContent = 'Creating your private room… The first connection may take a minute.';
-      room = new RoomClient(applyRoomState, roomConnection);
-      render();
-      try { await room.create(roomGame()); }
-      catch (error) {
-        room = null;
-        render();
-        // Plain static hosting still supports the original seed-only links.
-        if (window.CLUEGRID_API_URL || ![404, 405, 501].includes(error.status)) {
-          $('status').textContent = error.name === 'AbortError' ? 'The room server is taking too long. Please try sharing again.' : error.status ? error.message : 'Could not connect to the room service. Please try sharing again.';
+      const candidate = makeRoomClient();
+      const initial = JSON.stringify(roomGame());
+      try {
+        const snapshot = await candidate.create(JSON.parse(initial));
+        if (JSON.stringify(roomGame()) !== initial) {
+          candidate.stop();
+          $('status').textContent = 'Your board changed while connecting. Share game again to share the current board.';
           return;
         }
+        room = candidate;
+        applyRoomState(snapshot, true);
+      }
+      catch (error) {
+        candidate.stop();
+        syncUnavailable = true;
+        render();
       } finally { $('share').disabled = false; }
     }
     if (navigator.share && window.matchMedia('(pointer: coarse)').matches) {
@@ -345,7 +385,7 @@
     }
     try {
       await navigator.clipboard.writeText(location.href);
-      $('status').textContent = room ? 'Room link copied. Everyone with this link sees the host’s reveals.' : 'Board link copied. Live sharing is not configured on this site; this link shares the words only.';
+      $('status').textContent = room ? 'Room link copied. Everyone with this link sees the host’s reveals.' : 'Board link copied. Sync is unavailable; this link shares the words only. Keep playing locally.';
     }
     catch {
       $('modal-title').textContent = room ? 'Share this live room' : 'Share this board (local play only)';
@@ -358,9 +398,15 @@
     $('modal-content').innerHTML = '<ol><li>Split into red and blue teams. Pick one spymaster for each team. Share the invite link so everyone has the same board.</li><li>Spymasters open the key privately. The starting team has 9 agents; the other has 8.</li><li>Give a one-word clue and a number, such as “Nature, 3”. Say clues aloud or over your call. Do not use a word visible on the board.</li><li>Guessers select words. A correct agent lets you keep guessing, up to the clue number plus one. Keep track of turns together; the board only counts remaining words.</li><li>A civilian or opposing agent ends your turn. Reveal the assassin and your team loses. Find all your agents to win.</li></ol><p>English meanings can be hidden for an extra challenge. Share game creates a private live room. The host reveals cards, restarts, and starts new boards for everyone with the room link. Guests can choose their own languages and view. A seed without a room link is an independent local game. Spymaster view is a trust-based screen, not a private account.</p>';
     $('modal-actions').replaceChildren(); $('modal').showModal();
   };
-  load(params.get('seed') || String(crypto.getRandomValues(new Uint32Array(1))[0]), !joiningRoom);
+  if (cachedRoom) version = cachedRoom.version;
+  load(cachedRoom?.seed || params.get('seed') || String(crypto.getRandomValues(new Uint32Array(1))[0]), !joiningRoom);
+  if (cachedRoom) {
+    history = cachedRoom.history.slice();
+    state = history.reduce((current, index) => Game.reveal(board, current, index), freshState());
+    render();
+  }
   if (invitedRoom) {
-    room = new RoomClient(applyRoomState, roomConnection);
+    room = makeRoomClient();
     $('status').textContent = 'Joining the shared room…';
     room.join(invitedRoom);
   }

@@ -40,6 +40,7 @@
       if (changed || message) this.onConnection(connected, message);
     }
     apply(state) {
+      if (this.stopped) return;
       if (state.revision <= this.revision) return;
       const first = this.revision < 0;
       this.revision = state.revision;
@@ -54,6 +55,7 @@
       this.setConnection(true);
       this.apply(result.state);
       this.schedule();
+      return result.state;
     }
     async join(id) {
       this.id = id;
@@ -65,6 +67,10 @@
       clearTimeout(this.timer);
       if (!this.stopped) this.timer = setTimeout(() => this.poll(), this.connected ? 1000 : 3000);
     }
+    stop() {
+      this.stopped = true;
+      clearTimeout(this.timer);
+    }
     async poll() {
       try {
         const result = await this.request('/state', { room: this.id });
@@ -73,30 +79,36 @@
         this.apply(result.state);
       } catch (error) {
         if (this.stopped) return;
-        if (error.status === 404) this.stopped = true;
-        this.setConnection(false, error.status === 404 ? error.message : 'Connection lost. Reconnecting to the room…');
+        this.setConnection(false, 'Sync unavailable. Continue playing locally.');
       } finally { this.schedule(); }
     }
     async act(action, details = {}) {
-      if (!this.hostKey || !this.connected || this.busy) return;
+      if (!this.hostKey || !this.connected || this.busy || this.stopped) return false;
       this.busy = true;
       this.onConnection(this.connected, 'Saving move…');
       try {
         const result = await this.request('/action', { ...details, room: this.id, revision: this.revision, action }, true);
+        if (this.stopped) return false;
         this.apply(result.state);
       } catch (error) {
+        if (this.stopped) return false;
+        if (error.status === 409 && error.state) {
+          this.apply(error.state);
+          return true;
+        }
         if (error.state) this.apply(error.state);
         if (error.status === 403) {
           this.hostKey = null;
           try { localStorage.removeItem(`cluegrid:host:${this.id}`); } catch { /* Optional storage. */ }
         }
-        this.setConnection(false, error.status ? error.message : 'Could not confirm the move. Reconnecting…');
-        return;
+        this.setConnection(false, 'Sync unavailable. Continue playing locally.');
+        return false;
       } finally {
         this.busy = false;
-        this.onConnection(this.connected);
+        if (!this.stopped) this.onConnection(this.connected);
       }
       this.setConnection(true);
+      return true;
     }
   }
   window.RoomClient = RoomClient;
