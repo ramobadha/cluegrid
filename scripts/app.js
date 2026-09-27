@@ -3,6 +3,8 @@
   const title = (value) => value[0].toUpperCase() + value.slice(1);
   const latestVersion = 'gu-v2';
   const params = new URLSearchParams(location.search);
+  const invitedRoom = new URLSearchParams(location.hash.slice(1)).get('room');
+  let room = null, roomRound = null, joiningRoom = !!invitedRoom;
   let version = Object.hasOwn(WORD_BANKS, params.get('v')) ? params.get('v') : latestVersion;
   let seed, board, state, spy = false, history = [];
   let announcementTimer;
@@ -53,6 +55,7 @@
   const freshState = () => ({ revealed: [], winner: null });
   const storageKey = () => `kodenames:${version}:${seed}`;
   function save() {
+    if (room) return;
     try { localStorage.setItem(storageKey(), JSON.stringify({ history })); }
     catch { $('status').textContent = 'Browser storage is unavailable. Keep this tab open to retain progress.'; }
   }
@@ -97,7 +100,7 @@
       button.className = `card${visible ? ` ${card.team}` : ''}${revealed ? ' revealed' : ''}`;
       if (word.length > 14) button.classList.add('long-word');
       button.dataset.index = index;
-      button.disabled = revealed || !!state.winner || spy;
+      button.disabled = revealed || !!state.winner || spy || joiningRoom || !!(room && (!room.hostKey || !room.connected || room.busy));
       const name = document.createElement('span'); name.className = 'term'; name.lang = mainLanguage; name.textContent = word;
       const meaning = document.createElement('span'); meaning.className = 'meaning'; meaning.lang = meaningLanguage; meaning.textContent = translation; meaning.hidden = !$('meanings').checked;
       const number = document.createElement('span'); number.className = 'number'; number.textContent = String(index + 1).padStart(2, '0');
@@ -118,8 +121,16 @@
     $('player').setAttribute('aria-pressed', String(!spy)); $('spymaster').setAttribute('aria-pressed', String(spy));
     $('spy-notice').hidden = !spy;
     $('mode-caption').textContent = spy ? 'SPYMASTER VIEW' : 'PLAYER VIEW';
+    const readOnly = joiningRoom || !!(room && (!room.hostKey || !room.connected || room.busy));
+    for (const id of ['new-game', 'reset', 'seed']) $(id).disabled = readOnly;
+    $('seed-form').querySelector('button').disabled = readOnly;
+    $('leave-room').hidden = !room && !joiningRoom;
+    $('room-status').hidden = !room && !joiningRoom;
+    $('room-status').textContent = joiningRoom ? (room?.stopped ? 'Unavailable' : 'Joining…') : room ? `${room.hostKey ? 'Host' : 'Guest'} · ${room.connected ? 'Live' : 'Offline'}` : '';
   }
   function reveal(index) {
+    if (joiningRoom || spy) return;
+    if (room) { room.act('reveal', { index }); return; }
     const next = Game.reveal(board, state, index);
     if (next === state || spy) return;
     state = next; history.push(index); render();
@@ -130,6 +141,38 @@
       announceResult('Game over');
     } else if (state.winner) {
       announceResult(`Game over — ${title(state.winner)} team wins!`);
+    }
+  }
+  function roomGame(value = seed, bank = version, moves = history) {
+    const generated = Game.generate(value, WORD_BANKS[bank], Math.seedrandom);
+    return { seed: value, version: bank, teams: generated.cards.map(card => card.team), history: moves };
+  }
+  function roomConnection(connected, message = '') {
+    if (message) $('status').textContent = message;
+    else if (connected && room) $('status').textContent = state.winner
+      ? (state.winner === 'assassin' ? 'Game over' : `Game over — ${title(state.winner)} team wins!`)
+      : room.hostKey ? 'You are the host. Your reveals are shared with everyone in this room.'
+        : 'Live room. The host reveals cards for everyone.';
+    render();
+  }
+  function applyRoomState(snapshot, first) {
+    const previousWinner = state.winner;
+    const changedRound = roomRound !== snapshot.round;
+    joiningRoom = false;
+    if (changedRound && !first && $('modal').open) $('modal').close();
+    if (seed !== snapshot.seed || version !== snapshot.version || changedRound) {
+      version = snapshot.version;
+      load(snapshot.seed, false);
+    }
+    roomRound = snapshot.round;
+    history = snapshot.history;
+    state = history.reduce((current, index) => Game.reveal(board, current, index), freshState());
+    const url = new URL(location.href);
+    url.hash = new URLSearchParams({ room: room.id }).toString();
+    window.history.replaceState(null, '', url);
+    roomConnection(room.connected);
+    if (!first && state.winner && (changedRound || state.winner !== previousWinner)) {
+      announceResult(state.winner === 'assassin' ? 'Game over' : `Game over — ${title(state.winner)} team wins!`);
     }
   }
   function ask(heading, message, actionLabel, action, gujarati = false, meaning = '') {
@@ -149,18 +192,38 @@
   $('seed-form').onsubmit = (event) => {
     event.preventDefault(); const next = $('seed').value;
     if (next.trim().toLowerCase() === seed) return;
+    if (joiningRoom) return;
+    if (room) {
+      room.act('new', { game: roomGame(next.trim().toLowerCase().slice(0, 80), version, []) });
+      return;
+    }
     load(next);
     $('seed').blur();
   };
   $('new-game').onclick = () => {
     const start = () => {
+      if (joiningRoom) return;
+      if (room) {
+        room.act('new', { game: roomGame(String(crypto.getRandomValues(new Uint32Array(1))[0]), latestVersion, []) });
+        return;
+      }
       version = latestVersion;
       load(String(crypto.getRandomValues(new Uint32Array(1))[0]));
     };
-    if (history.length && !state.winner) ask('Start a new game?', 'Your current game is saved on this device. You can return using its seed.', 'New game', start);
+    if (history.length && !state.winner) ask('Start a new game?', room ? 'This starts a new board for everyone in the room.' : 'Your current game is saved on this device. You can return using its seed.', 'New game', start);
     else start();
   };
-  $('reset').onclick = () => ask('Restart this board?', 'This clears all guesses. Words and the key stay the same.', 'Restart board', () => { load(seed, false); save(); });
+  $('reset').onclick = () => ask('Restart this board?', room ? 'This clears guesses for everyone in the room. Words and the key stay the same.' : 'This clears all guesses. Words and the key stay the same.', 'Restart board', () => {
+    if (joiningRoom) return;
+    if (room) { room.act('reset'); return; }
+    load(seed, false); save();
+  });
+  $('leave-room').onclick = () => {
+    const url = new URL(location.href);
+    url.hash = '';
+    window.history.replaceState(null, '', url);
+    location.reload();
+  };
   $('player').onclick = () => { spy = false; render(); };
   $('spymaster').onclick = () => {
     if (!spy) ask('For spymasters only', 'This reveals every card’s identity. Make sure guessers cannot see your screen.', 'Show key', () => { spy = true; render(); });
@@ -254,24 +317,52 @@
     document.addEventListener(event, () => updateFocusMode(!!fullscreenElement()));
   }
   $('share').onclick = async () => {
+    if (joiningRoom || (room && !room.connected)) {
+      $('status').textContent = 'Wait for the room to connect before sharing its link.';
+      return;
+    }
+    if (!room) {
+      $('share').disabled = true;
+      $('status').textContent = 'Creating your private room…';
+      room = new RoomClient(applyRoomState, roomConnection);
+      render();
+      try { await room.create(roomGame()); }
+      catch (error) {
+        room = null;
+        render();
+        // Plain static hosting still supports the original seed-only links.
+        if (window.CLUEGRID_API_URL || ![404, 405, 501].includes(error.status)) {
+          $('status').textContent = error.name === 'AbortError' ? 'The room server is taking too long. Please try sharing again.' : error.status ? error.message : 'Could not connect to the room service. Please try sharing again.';
+          return;
+        }
+      } finally { $('share').disabled = false; }
+    }
     if (navigator.share && window.matchMedia('(pointer: coarse)').matches) {
       try {
         await navigator.share({ title: 'ClueGrid', text: `Join my board. Seed: ${seed}`, url: location.href });
         return;
       } catch (error) { if (error.name === 'AbortError') return; }
     }
-    try { await navigator.clipboard.writeText(location.href); $('status').textContent = 'Invite link copied. Your friends will get the same words and key; guesses are tracked separately.'; }
+    try {
+      await navigator.clipboard.writeText(location.href);
+      $('status').textContent = room ? 'Room link copied. Everyone with this link sees the host’s reveals.' : 'Board link copied. Live sharing is not configured on this site; this link shares the words only.';
+    }
     catch {
-      $('modal-title').textContent = 'Share this game';
+      $('modal-title').textContent = room ? 'Share this live room' : 'Share this board (local play only)';
       const input = document.createElement('input'); input.value = location.href; input.readOnly = true; input.style.width = '100%'; input.setAttribute('aria-label', 'Invite link');
       $('modal-content').replaceChildren(input); $('modal-actions').replaceChildren(); $('modal').showModal(); input.select();
     }
   };
   $('help').onclick = () => {
     $('modal-title').textContent = 'One clue. Make it count.';
-    $('modal-content').innerHTML = '<ol><li>Split into red and blue teams. Pick one spymaster for each team. Share the invite link so everyone has the same board.</li><li>Spymasters open the key privately. The starting team has 9 agents; the other has 8.</li><li>Give a one-word clue and a number, such as “Nature, 3”. Say clues aloud or over your call. Do not use a word visible on the board.</li><li>Guessers select words. A correct agent lets you keep guessing, up to the clue number plus one. Keep track of turns together; the board only counts remaining words.</li><li>A civilian or opposing agent ends your turn. Reveal the assassin and your team loses. Find all your agents to win.</li></ol><p>English meanings can be hidden for an extra challenge. Seed links share the initial board, not live moves. Each device tracks its own progress. Spymaster view is a trust-based screen, not a private account.</p>';
+    $('modal-content').innerHTML = '<ol><li>Split into red and blue teams. Pick one spymaster for each team. Share the invite link so everyone has the same board.</li><li>Spymasters open the key privately. The starting team has 9 agents; the other has 8.</li><li>Give a one-word clue and a number, such as “Nature, 3”. Say clues aloud or over your call. Do not use a word visible on the board.</li><li>Guessers select words. A correct agent lets you keep guessing, up to the clue number plus one. Keep track of turns together; the board only counts remaining words.</li><li>A civilian or opposing agent ends your turn. Reveal the assassin and your team loses. Find all your agents to win.</li></ol><p>English meanings can be hidden for an extra challenge. Share game creates a private live room. The host reveals cards, restarts, and starts new boards for everyone with the room link. Guests can choose their own languages and view. A seed without a room link is an independent local game. Spymaster view is a trust-based screen, not a private account.</p>';
     $('modal-actions').replaceChildren(); $('modal').showModal();
   };
-  load(params.get('seed') || String(crypto.getRandomValues(new Uint32Array(1))[0]));
+  load(params.get('seed') || String(crypto.getRandomValues(new Uint32Array(1))[0]), !joiningRoom);
+  if (invitedRoom) {
+    room = new RoomClient(applyRoomState, roomConnection);
+    $('status').textContent = 'Joining the shared room…';
+    room.join(invitedRoom);
+  }
   if (params.has('v') && params.get('v') !== version) $('status').textContent = 'This link uses an unsupported vocabulary version. The current Gujarati word set has been loaded; boards may differ.';
 })();

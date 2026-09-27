@@ -5,6 +5,8 @@ from pathlib import Path
 import shutil
 import unicodedata
 import re
+import os
+from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent
 
@@ -61,6 +63,13 @@ def load_words(filename='words.tsv'):
     return words
 
 def main():
+    api_url = os.environ.get('CLUEGRID_API_URL', '').strip().rstrip('/')
+    if api_url:
+        parsed = urlsplit(api_url)
+        local = parsed.scheme == 'http' and parsed.hostname in ('localhost', '127.0.0.1', '::1')
+        if (not parsed.hostname or (parsed.scheme != 'https' and not local)
+                or parsed.username or parsed.password or parsed.query or parsed.fragment):
+            raise ValueError('CLUEGRID_API_URL must be an HTTPS service URL (HTTP is allowed for localhost).')
     words = load_words()
     banks = {'gu-v1': load_words('words-v1.tsv'), 'gu-v2': words}
     languages = load_languages()
@@ -78,6 +87,7 @@ def main():
         shutil.copy2(ROOT / name, output / name)
     for name in ('scripts', 'styles', 'data'):
         shutil.copytree(ROOT / name, output / name, dirs_exist_ok=True)
+    (output / 'scripts/config.js').write_text('window.CLUEGRID_API_URL = ' + json.dumps(api_url) + ';\n', encoding='utf-8')
     # A deployment must not combine new markup with cached scripts or styles.
     html = (output / 'index.html').read_text(encoding='utf-8')
     def version_asset(match):

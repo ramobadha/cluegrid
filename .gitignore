@@ -1,5 +1,6 @@
 .reference/
 dist/
+instance/
 __pycache__/
 .test-deps/
 test-artifacts/

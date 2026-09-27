@@ -68,7 +68,6 @@ with sync_playwright() as p:
         assert page.locator('.card').count() == 25
         for width, height in [(568, 320), (667, 375), (844, 390), (390, 844)]:
             # Firefox exits native fullscreen when automation resizes its window.
-            page.locator('#focus-reveal').tap()
             page.locator('#focus-exit').tap()
             page.wait_for_function("!document.body.classList.contains('game-focus')")
             page.set_viewport_size({'width': width, 'height': height})
@@ -81,7 +80,6 @@ with sync_playwright() as p:
             assert page.evaluate('document.documentElement.scrollHeight <= innerHeight')
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             assert page.locator('.game').evaluate('e => e.scrollHeight <= e.clientHeight')
-        page.locator('#focus-reveal').tap()
         page.locator('#focus-exit').tap()
         page.wait_for_function("!document.body.classList.contains('game-focus')")
         assert page.locator('#seed-form').is_visible()
