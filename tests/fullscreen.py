@@ -15,7 +15,12 @@ with sync_playwright() as p:
         page.locator('#focus-mode').click()
         page.wait_for_function('!!document.fullscreenElement')
         box = page.locator('#board').bounding_box()
-        assert box['y'] >= 0 and box['y'] + box['height'] <= height, box
+        assert box == {'x': 0, 'y': 0, 'width': width, 'height': height}, box
+        first = page.locator('.card').first.bounding_box()
+        last = page.locator('.card').last.bounding_box()
+        assert first['x'] == 0 and first['y'] == 0, first
+        assert abs(last['x'] + last['width'] - width) < 1, last
+        assert abs(last['y'] + last['height'] - height) < 1, last
         assert page.locator('.card').count() == 25
         assert page.locator('#board').evaluate('e => e.scrollHeight <= e.clientHeight + 1')
         assert page.locator('.board-heading .view-switch').is_hidden()
