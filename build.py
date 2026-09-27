@@ -1,5 +1,6 @@
 """Validate the versioned Gujarati word bank and build a GitHub Pages site."""
 import json
+import hashlib
 from pathlib import Path
 import shutil
 import unicodedata
@@ -77,6 +78,14 @@ def main():
         shutil.copy2(ROOT / name, output / name)
     for name in ('scripts', 'styles', 'data'):
         shutil.copytree(ROOT / name, output / name, dirs_exist_ok=True)
+    # A deployment must not combine new markup with cached scripts or styles.
+    html = (output / 'index.html').read_text(encoding='utf-8')
+    def version_asset(match):
+        attribute, asset = match.groups()
+        digest = hashlib.sha256((output / asset).read_bytes()).hexdigest()[:16]
+        return f'{attribute}="{asset}?v={digest}"'
+    html = re.sub(r'(src|href)="((?:scripts|styles|data)/[^"?]+\.(?:js|css))"', version_asset, html)
+    (output / 'index.html').write_text(html, encoding='utf-8')
     (output / '.nojekyll').touch()
     print(f'Built dist/ with {len(words)} validated Gujarati terms (gu-v2); retained {len(banks["gu-v1"])} legacy terms (gu-v1).')
 
