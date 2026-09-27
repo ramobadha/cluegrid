@@ -182,7 +182,7 @@
     [mainLanguage, meaningLanguage] = [meaningLanguage, mainLanguage];
     applyLanguages();
   };
-  let controlsTimer;
+  let controlsTimer, orientationLocked = false;
   const fullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement;
   function showFocusControls() {
     if (!document.body.classList.contains('game-focus')) return;
@@ -195,12 +195,19 @@
     document.body.classList.remove('focus-controls-visible');
     clearTimeout(controlsTimer);
     $('focus-exit').hidden = !enabled;
+    $('focus-exit').textContent = fullscreenElement() ? 'Exit full screen' : 'Exit grid view';
     $('focus-reveal').hidden = !enabled;
     $('focus-mode').setAttribute('aria-pressed', String(enabled));
     if (enabled) {
       $('focus-mode').blur();
       showFocusControls();
-    } else $('focus-mode').focus({ preventScroll: true });
+    } else {
+      if (orientationLocked) {
+        try { screen.orientation.unlock(); } catch { /* Some browsers unlock automatically. */ }
+        orientationLocked = false;
+      }
+      $('focus-mode').focus({ preventScroll: true });
+    }
   }
   $('focus-mode').onclick = async () => {
     const root = document.documentElement;
@@ -209,19 +216,34 @@
       else if (root.webkitRequestFullscreen) await root.webkitRequestFullscreen();
       else throw new Error('Fullscreen unavailable');
       updateFocusMode(!!fullscreenElement());
+      if (fullscreenElement() && navigator.maxTouchPoints > 0 && screen.orientation?.lock) {
+        try {
+          await screen.orientation.lock('landscape');
+          orientationLocked = true;
+          if (!fullscreenElement()) {
+            screen.orientation.unlock();
+            orientationLocked = false;
+          }
+        } catch { /* Rotate the device manually when orientation locking is unavailable. */ }
+      }
     } catch {
-      updateFocusMode(false);
-      $('status').textContent = 'Fullscreen is unavailable or blocked. Open this page directly in Chrome and allow fullscreen. On desktop, F11 also hides browser tabs.';
-      $('status').scrollIntoView({ block: 'nearest' });
+      // iPhone Safari and restricted embeds may not expose native element fullscreen.
+      // Keep the same fitted board without pretending to hide browser-owned controls.
+      updateFocusMode(true);
+      $('status').textContent = 'This browser does not allow native fullscreen. The grid fits the browser window; rotate your phone for landscape.';
     }
   };
   $('focus-exit').onclick = async () => {
+    if (!fullscreenElement()) { updateFocusMode(false); return; }
     try {
       if (document.exitFullscreen) await document.exitFullscreen();
       else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
     } catch { showFocusControls(); }
   };
   $('focus-reveal').onclick = showFocusControls;
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && document.body.classList.contains('game-focus') && !fullscreenElement() && !$('modal').open) updateFocusMode(false);
+  });
   document.addEventListener('pointermove', event => {
     if (event.clientY < 48) showFocusControls();
   });
