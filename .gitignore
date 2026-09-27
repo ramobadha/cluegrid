@@ -1,0 +1,6 @@
+.reference/
+dist/
+__pycache__/
+.test-deps/
+test-artifacts/
+codex-session-*.md

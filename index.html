@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f5f2e9">
+  <meta name="description" content="ClueGrid is a multilingual word guessing game. Share a seed, find your agents, and watch out for the assassin.">
+  <title>ClueGrid — Multilingual</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/mobile.css">
+  <script defer src="scripts/seedrandom.js"></script><script defer src="data/words.js"></script>
+  <script defer src="scripts/game.js"></script><script defer src="scripts/app.js"></script>
+</head>
+<body>
+  <header class="masthead"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">▦</span> ClueGrid<span class="edition">MULTILINGUAL EDITION</span></a><button id="help" class="text-button">How to play <span aria-hidden="true">↗</span></button></header>
+  <main>
+    <section class="intro"><div><p class="eyebrow">A FAMILIAR GAME. A NEW LANGUAGE.</p><h1>Find the words.<br><em>Make the connection.</em></h1><p class="description">One clue. A world of possibilities. Bring your team together<br class="desktop-break"> with a little wordplay in a language of your choice.</p></div><div class="intro-stamp" aria-hidden="true"><span>25 WORDS</span><b>∞</b><span>CONNECTIONS</span></div></section>
+    <section class="game" aria-label="Game workspace">
+      <div class="toolbar"><form id="seed-form"><label for="seed">GAME SEED</label><div class="seed-control"><span aria-hidden="true">#</span><input id="seed" maxlength="80" required spellcheck="false" autocapitalize="none" autocomplete="off" enterkeyhint="go" aria-label="Game seed"><button title="Load seed" aria-label="Load seed">↵</button></div></form><button id="share" class="secondary">Share game <span aria-hidden="true">↗</span></button><div class="toolbar-spacer"></div><button id="new-game" class="primary">New game <span aria-hidden="true">＋</span></button><button id="focus-mode" class="secondary focus-mode" type="button" aria-label="Enter full screen game view" title="Full screen game view"><span aria-hidden="true">⛶</span></button></div>
+      <div class="language-bar" aria-label="Language settings"><label for="main-language">WORD LANGUAGE<select id="main-language"></select></label><span class="language-arrow" aria-hidden="true">↔</span><label for="meaning-language">MEANING LANGUAGE<select id="meaning-language"></select></label></div>
+      <div class="play-layout"><section class="board-section" aria-label="Word matrix"><div class="board-heading"><div class="view-switch" aria-label="Board view"><button id="player" aria-pressed="true">Player</button><button id="spymaster" aria-pressed="false">Spymaster</button></div><label class="toggle"><input id="meanings" type="checkbox" checked><span>Show meanings</span></label></div><p id="spy-notice" class="spy-notice" hidden>Spymaster key is visible. Keep this screen away from guessers.</p><div id="board" class="board" aria-label="25 word cards"></div><div class="board-foot"><span><i class="live-dot"></i> <span id="mode-caption">PLAYER VIEW</span></span><label class="toggle"><input type="checkbox" id="confirm" checked><span>Confirm guesses</span></label></div></section>
+      <aside class="sidebar"><div class="mission-label">THE MISSION <span>01 / 25</span></div><h2 id="turn-heading">Your team's turn</h2><p id="turn-description">Listen to your spymaster. Find your agents.</p><div class="team-score red"><div><span class="team-name">● &nbsp; RED TEAM</span><span class="team-detail">Agents remaining</span></div><strong id="red-score">9</strong></div><div class="team-score blue"><div><span class="team-name">◆ &nbsp; BLUE TEAM</span><span class="team-detail">Agents remaining</span></div><strong id="blue-score">8</strong></div><button id="end-turn" class="end-turn">End turn <span aria-hidden="true">→</span></button><div class="field-note"><span class="eyebrow">A LITTLE FIELD NOTE</span><p>Think beyond the obvious.<br>The best clues bring unlikely<br>words together.</p><div class="legend"><span>● Agent</span><span>○ Civilian</span><span>× Assassin</span></div></div><button id="reset" class="text-button reset">↺ &nbsp; Restart this board</button></aside></div>
+      <p id="status" class="status" role="status" aria-live="polite">Ready when you are.</p>
+    </section>
+    <footer><span>SAME SEED. SAME WORDS. YOUR CONNECTIONS.</span><span id="word-bank-size"></span><span>Made for game nights. <span class="footer-star">✳</span></span></footer>
+  </main>
+  <section class="mobile-turnbar" aria-label="Current turn and score"><div class="mobile-turn-info"><strong id="mobile-turn" aria-live="polite"></strong><div class="mobile-scores"><span class="red">● Red <b id="mobile-red"></b></span><span class="blue">◆ Blue <b id="mobile-blue"></b></span><span class="remaining-label">left</span></div></div><button id="mobile-end-turn" class="primary">End turn →</button></section>
+  <button id="focus-exit" class="focus-exit" type="button" hidden><span aria-hidden="true">⤢</span> Exit full screen</button>
+  <dialog id="modal" aria-labelledby="modal-title"><form method="dialog"><button class="close" aria-label="Close dialog">×</button></form><h2 id="modal-title"></h2><div id="modal-content"></div><div id="modal-actions"></div></dialog>
+</body>
+</html>

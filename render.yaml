@@ -1,0 +1,6 @@
+services:
+  - type: web
+    runtime: static
+    name: cluegrid
+    buildCommand: python build.py
+    staticPublishPath: dist

@@ -1,0 +1,221 @@
+/* Touch improvements apply on desktop too; the game matrix keeps its five columns. */
+html { scroll-padding-bottom: 120px; -webkit-text-size-adjust: 100%; }
+button { touch-action: manipulation; }
+button, input, .toggle, .brand { min-height: 44px; }
+button:disabled { opacity: 1; -webkit-text-fill-color: currentColor; }
+.toggle { padding: 6px 2px; touch-action: manipulation; }
+.toggle input { min-height: 18px; width: 18px; height: 18px; flex-shrink: 0; }
+.seed-control input, dialog input { font-size: 16px; }
+.seed-control button, .close { min-width: 44px; }
+.primary, .secondary, .end-turn { font-size: 13px; }
+.view-switch button { font-size: 13px; }
+.board-section { min-width: 0; }
+.card { scroll-margin-block: 16px 120px; }
+.card .meaning { font-size: 11px; color: #526145; }
+.card .number { color: #627451; }
+.card.red { background: #ac463b; }
+.card.blue { background: #356f8d; }
+.card.red .meaning, .card.blue .meaning, .card.assassin .meaning,
+.card.red .number, .card.blue .number, .card.assassin .number { color: white; }
+.card.neutral .meaning { color: #51432e; }
+.status { overflow-wrap: anywhere; font-size: 12px; line-height: 1.6; color: #58664a; }
+footer { flex-wrap: wrap; gap: 12px; color: #636d52; }
+.language-bar { display: flex; align-items: center; justify-content: center; gap: 18px; padding: 10px 24px; border-bottom: 1px solid var(--line); background: #ffffff50; }
+.language-bar label { display: flex; align-items: center; gap: 10px; font-size: 9px; letter-spacing: 1.2px; font-weight: 700; }
+.language-bar select { min-width: 160px; min-height: 44px; padding: 8px 32px 8px 11px; border: 1px solid #cdd4c5; border-radius: 6px; background: #fff; color: var(--ink); font: 13px 'DM Sans','Noto Sans Gujarati',sans-serif; letter-spacing: 0; }
+.language-arrow { color: #788467; font-size: 20px; }
+.mobile-turnbar { display: none; }
+
+/* Scroll long rules and keep dialogs usable above a phone's virtual keyboard. */
+dialog {
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+body:has(dialog[open]) { overflow: hidden; }
+dialog h2 { margin: 12px 36px 16px 0; }
+dialog p, dialog li { font-size: 15px; line-height: 1.7; color: #56634c; overflow-wrap: anywhere; }
+dialog input { padding: 10px; }
+.close { top: 8px; right: 8px; }
+#modal-actions { gap: 12px; }
+#modal-actions button { min-height: 48px; }
+dialog .dialog-word { font-size: 32px; line-height: 1.7; color: var(--ink); text-align: center; margin: 24px 0 8px; }
+dialog .dialog-meaning { font-size: 17px; text-align: center; margin: 0; }
+
+@media (hover: none), (pointer: coarse) {
+  /* Touch should not leave a hovered card floating after a tap. */
+  .card:not(:disabled):hover { background: #eef0e4; transform: none; border-color: #d9dccd; border-bottom-color: #ced3be; }
+}
+
+@media (max-width: 900px), (max-height: 500px) and (pointer: coarse) {
+  body { padding-bottom: calc(105px + env(safe-area-inset-bottom, 0px)); }
+  .masthead {
+    height: auto;
+    min-height: 62px;
+    gap: 10px;
+    padding: max(4px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) 4px max(12px, env(safe-area-inset-left, 0px));
+  }
+  .brand { font-size: 22px; gap: 7px; }
+  .brand-icon { font-size: 28px; }
+  .edition { font-size: 9px; margin-left: 4px; padding-left: 12px; letter-spacing: 1px; }
+  .masthead .text-button { font-size: 12px; padding-inline: 6px; }
+  main { padding: 0 max(10px, env(safe-area-inset-right, 0px)) 0 max(10px, env(safe-area-inset-left, 0px)); }
+  .intro { padding: 16px 4px 18px; }
+  .intro .eyebrow { font-size: 9px; margin-bottom: 6px; letter-spacing: 1.5px; }
+  h1 { font-size: 29px; line-height: 1.2; letter-spacing: -.8px; }
+  h1 br { display: none; }
+  h1 em::before { content: ' '; }
+  .description, .intro-stamp { display: none; }
+  .toolbar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; }
+  .toolbar form { grid-column: 1 / -1; min-width: 0; }
+  .toolbar label { flex-shrink: 0; font-size: 10px; }
+  .seed-control { flex: 1; min-width: 0; padding-right: 0; }
+  .seed-control input { width: 100%; min-width: 0; flex: 1; font-size: 16px; }
+  .toolbar-spacer { display: none; }
+  .primary, .secondary { min-height: 46px; font-size: 14px; }
+  .language-bar { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: 6px; padding: 8px 10px; }
+  .language-bar label { display: flex; flex-direction: column; align-items: stretch; gap: 3px; font-size: 8px; letter-spacing: .8px; }
+  .language-bar select { min-width: 0; width: 100%; min-height: 44px; padding: 7px 22px 7px 7px; font-size: 16px; }
+  .play-layout { display: flex; flex-direction: column; gap: 0; padding: 12px; }
+  .board-heading { gap: 6px; margin-bottom: 10px; }
+  .view-switch button { padding: 8px 13px; font-size: 13px; }
+  .toggle { font-size: 12px; color: #586450; }
+  .board { gap: 7px; }
+  .card { min-height: 104px; padding: 25px 5px 10px; }
+  .card .term { font-size: 22px; }
+  .card.long-word .term { font-size: 19px; }
+  .card .meaning { font-size: 12px; margin-top: 3px; }
+  .card .number { font-size: 9px; }
+  /* Card identity has its own line so it cannot overlap the position number. */
+  .card .identity { position: static; font-size: 9px; order: 3; margin-top: 5px; }
+  .card .identity:empty { display: none; }
+  .board-foot { margin-top: 6px; font-size: 10px; gap: 8px; }
+  .sidebar { display: block; border: 0; padding: 0; }
+  .sidebar > :not(.reset) { display: none; }
+  .sidebar .reset { display: block; width: 100%; margin: 6px 0 0; border-top: 1px solid var(--line); font-size: 12px; }
+  .status { padding: 10px 12px; }
+  footer { padding: 18px 4px; font-size: 9px; line-height: 1.5; gap: 8px; }
+  footer > span:first-child { flex-basis: 100%; }
+  .mobile-turnbar {
+    position: fixed;
+    z-index: 5;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    background: #faf9f4;
+    border-top: 2px solid var(--green);
+    box-shadow: 0 -5px 22px #25382e10;
+  }
+  .mobile-turnbar[data-team=red] { border-top-color: var(--red); }
+  .mobile-turnbar[data-team=blue] { border-top-color: var(--blue); }
+  .mobile-turn-info { min-width: 0; }
+  #mobile-turn { display: block; font-size: 14px; line-height: 1.4; }
+  .mobile-scores { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; margin-top: 4px; }
+  .mobile-scores .red { color: var(--red); }
+  .mobile-scores .blue { color: var(--blue); }
+  .remaining-label { color: var(--muted); }
+  #mobile-end-turn { flex-shrink: 0; min-height: 48px; padding: 10px 16px; }
+  #mobile-end-turn:disabled { opacity: .5; }
+  dialog { padding: 24px; }
+}
+@media (max-width: 540px) {
+  .edition { display: none; }
+  .intro { padding-block: 12px; }
+  .intro .eyebrow { font-size: 8px; }
+  h1 { font-size: 24px; }
+  .play-layout { padding: 10px 7px; }
+  .board { gap: 5px; }
+  .card { min-height: 96px; padding: 23px 3px 9px; }
+  .card .term { font-size: 17px; line-height: 1.7; }
+  .card.long-word .term { font-size: 15px; }
+  .card .meaning { font-size: 10px; line-height: 1.45; }
+  .card .number { left: 5px; }
+  .card .identity { font-size: 8px; letter-spacing: 0; }
+  .view-switch button { padding-inline: 11px; }
+  dialog {
+    width: calc(100% - 20px);
+    margin: auto 10px max(10px, env(safe-area-inset-bottom, 0px));
+    border-radius: 18px;
+    padding: 24px 20px;
+  }
+  #modal-actions button { flex: 1; }
+}
+@media (max-width: 359px) {
+  main { padding-inline: max(5px, env(safe-area-inset-left, 0px)); }
+  .masthead { padding-inline: 8px; gap: 4px; }
+  .brand { font-size: 20px; }
+  .masthead .text-button { font-size: 11px; padding-inline: 4px; }
+  .text-button span { margin-left: 4px; }
+  .intro .eyebrow { letter-spacing: 1px; }
+  h1 { font-size: 22px; }
+  .toolbar { padding: 10px; }
+  .board-heading { flex-wrap: wrap; }
+  .board-heading > .toggle { margin-left: auto; }
+  .view-switch button { padding-inline: 10px; font-size: 12px; }
+  .toggle { font-size: 11px; }
+  .board { gap: 4px; }
+  .card .term { font-size: 16px; }
+  .card.long-word .term { font-size: 14px; }
+  .mobile-turnbar { padding-inline: max(10px, env(safe-area-inset-left, 0px)); gap: 8px; }
+  #mobile-turn { font-size: 13px; }
+  .mobile-scores { gap: 8px; }
+  #mobile-end-turn { font-size: 13px; padding-inline: 12px; }
+}
+@media (max-height: 500px) and (orientation: landscape) and (max-width: 1000px) {
+  .intro { display: none; }
+  .masthead { min-height: 52px; }
+  .toolbar { display: flex; gap: 8px; padding-block: 8px; }
+  .toolbar form { flex: 1; }
+  .toolbar .seed-control input { width: 80px; }
+  .toolbar .primary, .toolbar .secondary { padding-inline: 10px; white-space: nowrap; }
+  .play-layout { padding-top: 8px; }
+  .card { min-height: 90px; }
+  dialog { width: min(560px, calc(100% - 32px)); max-width: 560px; margin: auto; padding: 20px; }
+  dialog .dialog-word { margin-top: 12px; }
+}
+
+/* A focused table view hides setup and reading material while keeping play controls. */
+.focus-mode { min-width: 48px; min-height: 44px; padding: 6px 12px; font-size: 24px; line-height: 1; }
+.focus-exit { position: fixed; z-index: 9; top: max(8px, env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); min-height: 42px; padding: 8px 14px; border: 1px solid #cdd4c5; border-radius: 999px; background: #faf9f4; color: var(--ink); box-shadow: 0 3px 14px #15281f20; font-size: 13px; font-weight: 600; }
+.focus-exit span { margin-right: 5px; font-size: 18px; }
+body.game-focus { min-height: 100dvh; overflow: hidden; padding: 0; }
+body.game-focus > .masthead,
+body.game-focus main > .intro,
+body.game-focus .toolbar,
+body.game-focus .language-bar,
+body.game-focus .status,
+body.game-focus footer { display: none !important; }
+body.game-focus main { width: 100%; max-width: none; height: 100dvh; margin: 0; padding: 0; }
+body.game-focus .game { height: 100%; min-height: 100%; overflow: auto; border: 0; border-radius: 0; box-shadow: none; padding-top: 52px; }
+body.game-focus .play-layout { min-height: calc(100% - 52px); }
+body.game-focus .sidebar .mission-label,
+body.game-focus .sidebar h2,
+body.game-focus .sidebar > p,
+body.game-focus .sidebar .field-note,
+body.game-focus .sidebar .reset { display: none !important; }
+body.game-focus .board-foot,
+body.game-focus .board-heading > .toggle { display: none !important; }
+body.game-focus .focus-exit { display: block; }
+body.game-focus .mobile-turnbar { z-index: 8; }
+
+@media (max-width: 900px), (max-height: 500px) and (pointer: coarse) {
+  body.game-focus { padding-bottom: 0; }
+  body.game-focus .game { padding-top: 50px; }
+  body.game-focus .play-layout { min-height: calc(100% - 50px); padding: 6px 8px 12px; }
+  body.game-focus .board-heading { margin-bottom: 4px; }
+  body.game-focus .board { gap: 4px; }
+  body.game-focus .card { min-height: clamp(42px, 10.5dvh, 82px); padding: 18px 3px 5px; }
+  body.game-focus .card .term { font-size: clamp(13px, 4.5vw, 20px); }
+  body.game-focus .card.long-word .term { font-size: clamp(11px, 3.8vw, 17px); }
+  body.game-focus .card .meaning { font-size: clamp(9px, 2.7vw, 12px); }
+  body.game-focus .sidebar { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 4px 0 0; border: 0; }
+  body.game-focus .sidebar .team-score { min-height: 46px; margin: 0; padding: 7px 9px; }
+  body.game-focus .sidebar .end-turn { display: none; }
+  body.game-focus .mobile-turnbar { padding-top: 7px; padding-bottom: calc(7px + env(safe-area-inset-bottom, 0px)); }
+}

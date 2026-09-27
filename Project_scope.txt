@@ -1,0 +1,9 @@
+I want to make this app similar to this one: https://github.com/ninjabunny/KodeNames
+
+Just I want it in Gujarati vocabulary. 
+Also I want it to show meaning of each vocab in a matrix.
+
+I will need you to use:
+Python, Any Frontend that will be better for this usecase. I will put this in Github Pages.
+
+Also, it should work in same manner as it is working with this in english. Same seeding system. 
