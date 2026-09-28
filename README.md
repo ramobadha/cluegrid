@@ -107,12 +107,6 @@ Empire requires the room service for collection and reveal. Connection failures 
 
 The `ramobadha/empire` repository deploys the standalone frontend using `deploy/empire-pages.yml`. Its workflow builds the current `main` source from this repository. After pushing Empire changes here, run **Deploy Empire** in that repository; API changes also require a Render deployment. No additional paid service is needed.
 
-## Game hub
-
-The root site at **https://ramobadha.github.io/** presents the available games and links to ClueGrid and Empire. Its source is in `hub/`, and `python build.py` produces the standalone `dist/hub/` site. Add future games as another accessible card in `hub/index.html`.
-
-The `ramobadha/ramobadha.github.io` repository deploys the hub using `deploy/hub-pages.yml`. Like the Empire workflow, it builds the current `main` source from this repository so the root Pages repository contains only its deployment setup.
-
 Checks: `python -m unittest discover -s tests -p "test_*.py"` covers authorization, room isolation, idempotency, simultaneous show/submit requests, validation, and private snapshots. With the Flask server at port 8877, `python tests/empire_browser.py` covers separate host/player devices, tab ownership, refresh, failed submission retry, safe rendering, and phone/desktop layouts.
 
 ## Attribution

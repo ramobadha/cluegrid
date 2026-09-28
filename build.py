@@ -111,19 +111,6 @@ def main():
     empire_html = re.sub(r'(src|href)="([^"/?]+\.(?:js|css))"', empire_asset, empire_html)
     (empire / 'index.html').write_text(empire_html, encoding='utf-8')
     (empire / '.nojekyll').touch()
-    hub = output / 'hub'
-    shutil.copytree(ROOT / 'hub', hub, dirs_exist_ok=True)
-    shutil.copy2(ROOT / 'styles/fonts.css', hub / 'fonts.css')
-    shutil.copytree(ROOT / 'styles/fonts', hub / 'fonts', dirs_exist_ok=True)
-    shutil.copy2(ROOT / 'THIRD_PARTY_LICENSE.md', hub / 'THIRD_PARTY_LICENSE.md')
-    hub_html = (hub / 'index.html').read_text(encoding='utf-8')
-    def hub_asset(match):
-        attribute, asset = match.groups()
-        digest = hashlib.sha256((hub / asset).read_bytes()).hexdigest()[:16]
-        return f'{attribute}="{asset}?v={digest}"'
-    hub_html = re.sub(r'(src|href)="([^"/?]+\.(?:js|css))"', hub_asset, hub_html)
-    (hub / 'index.html').write_text(hub_html, encoding='utf-8')
-    (hub / '.nojekyll').touch()
     print(f'Built dist/ with {len(words)} validated Gujarati terms (gu-v2); retained {len(banks["gu-v1"])} legacy terms (gu-v1).')
 
 if __name__ == '__main__':
