@@ -10,6 +10,8 @@ import unicodedata
 
 from flask import abort, jsonify, request
 
+REVEAL_LIFETIME = 3 * 60
+
 
 def register_empire(app, connect, payload):
     with closing(connect()) as db, db:
@@ -27,8 +29,12 @@ def register_empire(app, connect, payload):
         room = value.get('room')
         if not isinstance(room, str) or not re.fullmatch(r'[A-Za-z0-9_-]{43}', room):
             abort(404, 'This Empire room is unavailable. Ask the host for a new link.')
-        row = db.execute('SELECT * FROM empire_rooms WHERE id = ? AND expires_at > ?',
-                         (room, time.time())).fetchone()
+        now = time.time()
+        # Deleting the row clears both the submitted entries and revealed list.
+        deleted = db.execute('DELETE FROM empire_rooms WHERE id = ? AND expires_at <= ?', (room, now))
+        if deleted.rowcount:
+            db.commit()
+        row = db.execute('SELECT * FROM empire_rooms WHERE id = ?', (room,)).fetchone()
         if row is None:
             abort(404, 'This Empire room has expired or restarted. Ask the host for a new link.')
         return row
@@ -41,7 +47,8 @@ def register_empire(app, connect, payload):
     def state(row, player=None):
         entries = json.loads(row['entries'])
         return dict(closed=row['viewer_hash'] is not None, count=len(entries),
-                    submitted=bool(player and player in entries), host=is_host(row))
+                    submitted=bool(player and player in entries), host=is_host(row),
+                    clearsAt=row['expires_at'] if row['viewer_hash'] is not None else None)
 
     @app.post('/api/empire/rooms')
     def empire_create():
@@ -63,7 +70,7 @@ def register_empire(app, connect, payload):
     def empire_state():
         value = payload()
         player = token(value['playerKey']) if value.get('playerKey') else None
-        with closing(connect()) as db:
+        with closing(connect()) as db, db:
             return jsonify(state=state(row_for(db, value), player))
 
     @app.post('/api/empire/rooms/submit')
@@ -110,6 +117,6 @@ def register_empire(app, connect, payload):
             if not words:
                 abort(409, 'Wait for at least one submission before showing the words.')
             secrets.SystemRandom().shuffle(words)
-            db.execute('UPDATE empire_rooms SET viewer_hash = ?, words = ? WHERE id = ?',
-                       (viewer, json.dumps(words), row['id']))
+            db.execute('UPDATE empire_rooms SET viewer_hash = ?, words = ?, expires_at = ? WHERE id = ?',
+                       (viewer, json.dumps(words), time.time() + REVEAL_LIFETIME, row['id']))
             return jsonify(words=words, state=state(row_for(db, value)))

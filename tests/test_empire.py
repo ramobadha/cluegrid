@@ -1,8 +1,11 @@
 import concurrent.futures
+from contextlib import closing
 import secrets
 import tempfile
+import time
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from server import create_app
 
@@ -10,7 +13,8 @@ from server import create_app
 class EmpireTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.app = create_app(Path(self.temp.name) / 'rooms.sqlite3')
+        self.database = Path(self.temp.name) / 'rooms.sqlite3'
+        self.app = create_app(self.database)
         self.client = self.app.test_client()
         self.created = self.client.post('/api/empire/rooms', json={}).get_json()
         self.room = self.created['room']
@@ -43,6 +47,20 @@ class EmpireTests(unittest.TestCase):
         self.assertNotIn('words', self.post('state').json['state'])
         self.assertEqual(self.post('submit', playerKey=secrets.token_urlsafe(32), word='late').status_code, 409)
         self.assertEqual(result.headers['Cache-Control'], 'no-store')
+
+    def test_room_and_words_are_deleted_three_minutes_after_show(self):
+        self.post('submit', playerKey=self.player, word='temporary secret')
+        revealed_at = time.time()
+        with patch('empire_api.time.time', return_value=revealed_at):
+            result = self.show()
+        self.assertAlmostEqual(result.json['state']['clearsAt'], revealed_at + 180)
+        with patch('empire_api.time.time', return_value=revealed_at + 179):
+            self.assertEqual(self.post('state').status_code, 200)
+        with patch('empire_api.time.time', return_value=revealed_at + 180):
+            self.assertEqual(self.post('state').status_code, 404)
+        import sqlite3
+        with closing(sqlite3.connect(self.database)) as db:
+            self.assertEqual(db.execute('SELECT count(*) FROM empire_rooms WHERE id = ?', (self.room,)).fetchone()[0], 0)
 
     def test_submission_retry_is_idempotent_and_immutable(self):
         for _ in range(2):

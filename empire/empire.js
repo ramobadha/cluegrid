@@ -4,10 +4,45 @@
   const read = (kind, key) => { try { return window[kind].getItem(key); } catch { return null; } };
   const write = (kind, key, value) => { try { window[kind].setItem(key, value); } catch { /* Keep keys in memory if storage is blocked. */ } };
   let room = new URLSearchParams(location.hash.slice(1)).get('room');
-  let hostKey, playerKey, viewerKey, current, online = false, busy = false, timer;
+  let hostKey, playerKey, viewerKey, current, online = false, busy = false, timer, countdownTimer;
   let words = null, attemptedRecovery = false;
   const message = text => { $('message').textContent = text; };
   const base = window.CLUEGRID_API_URL || location.origin;
+
+  function clearStoredRoom(id) {
+    for (const kind of ['localStorage', 'sessionStorage']) {
+      for (const name of ['host', 'player', 'viewer']) {
+        try { window[kind].removeItem('empire:' + name + ':' + id); } catch { /* Storage is optional. */ }
+      }
+    }
+  }
+
+  function clearExpiredRoom() {
+    const expiredRoom = room;
+    clearTimeout(timer); clearInterval(countdownTimer);
+    words = null; current = null; room = null; hostKey = null; playerKey = null; viewerKey = null; online = false;
+    $('words').replaceChildren(); $('reveal').hidden = true;
+    clearStoredRoom(expiredRoom);
+    const url = new URL(location.href); url.hash = ''; history.replaceState(null, '', url);
+    render();
+    message('Time is up. All words were cleared and the room was closed. Host a new room to play again.');
+  }
+
+  function updateCountdown() {
+    if (!current?.clearsAt) { clearInterval(countdownTimer); return; }
+    const remaining = Math.max(0, Math.ceil(current.clearsAt * 1000 - Date.now()));
+    const seconds = Math.ceil(remaining / 1000);
+    const minutes = Math.floor(seconds / 60);
+    $('countdown').querySelector('strong').textContent = `${String(minutes).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+    if (!remaining) clearExpiredRoom();
+  }
+
+  function scheduleCountdown() {
+    clearInterval(countdownTimer);
+    if (!current?.clearsAt) return;
+    updateCountdown();
+    countdownTimer = setInterval(updateCountdown, 250);
+  }
 
   async function request(path, body = {}, timeout = 12000) {
     const controller = new AbortController();
@@ -64,6 +99,7 @@
   function acceptState(next) {
     current = { ...next, closed: next.closed || !!current?.closed,
       submitted: next.submitted || !!current?.submitted, count: Math.max(next.count, current?.count || 0) };
+    scheduleCountdown();
   }
 
   async function poll() {
@@ -81,6 +117,7 @@
         }
       }
     } catch (error) {
+      if (error.status === 404 && current?.closed) { clearExpiredRoom(); return; }
       online = false; render(); message(error.message);
       if (error.status === 404) { $('connection').textContent = 'Room unavailable'; return; }
     } finally { clearTimeout(timer); }
@@ -138,7 +175,7 @@
     busy = true; render(); message('Opening the word list…');
     try {
       const result = await request('/show', { viewerKey });
-      acceptState(result.state); render(); displayWords(result.words); message('Entries closed. These words are visible only in this host tab.');
+      acceptState(result.state); render(); displayWords(result.words); message('Entries closed. This room and all words clear automatically in 3 minutes.');
     } catch (error) { message(error.message); }
     finally { busy = false; render(); }
   }

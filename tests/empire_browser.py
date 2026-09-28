@@ -53,6 +53,8 @@ with sync_playwright() as p:
     host.locator('#show').click()
     host.locator('#confirm-reveal').click()
     expect(host.locator('#words li')).to_have_count(2)
+    expect(host.locator('#countdown')).to_contain_text('until room clears')
+    assert host.locator('#countdown strong').inner_text() in ('03:00', '02:59')
     assert sorted(host.locator('#words li').all_text_contents()) == ['<img src=x onerror=alert(1)>', 'Mango']
     assert host.locator('#words img').count() == 0
     for page in (guest, guest2):
