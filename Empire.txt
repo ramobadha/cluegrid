@@ -1,0 +1,7 @@
+This game will have new endpoint /empire
+
+I this game there will be host section and player's section. All players will get a textbox,
+to give their word. After submitting nothing now happens. But, after the host in his section, 
+clicks show, all the words from all the players appear in new lines. after that show button is clicked no new entry is allowed.
+After the click of the show button no other device can click or see those words.
+And yes this also has to be in a room.

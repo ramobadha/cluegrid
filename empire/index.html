@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#172d29">
+  <meta name="description" content="One secret word each. One room. Let the game of Empire begin.">
+  <title>Empire — A game of secret identities</title>
+  <link rel="stylesheet" href="fonts.css"><link rel="stylesheet" href="empire.css">
+  <script defer src="config.js"></script><script defer src="empire.js"></script>
+</head>
+<body>
+  <header><a class="brand" href="./" aria-label="Empire home"><span aria-hidden="true">♜</span> EMPIRE</a><a class="other-game" href="/cluegrid/">Play ClueGrid ↗</a></header>
+  <main>
+    <section class="intro"><p class="eyebrow">A GAME OF SECRET IDENTITIES</p><h1>One word.<br>A whole <em>empire.</em></h1><p>Choose your word. Keep your identity secret.<br>Let the host bring everyone together.</p><div class="seal" aria-hidden="true">E<span>LET THE GUESSING BEGIN</span></div></section>
+    <section id="welcome" class="panel" aria-labelledby="welcome-title">
+      <div class="panel-top"><span class="eyebrow">GATHER YOUR PEOPLE</span><span class="step">01 / CREATE A ROOM</span></div>
+      <h2 id="welcome-title">Every empire starts somewhere.</h2><p>Host a private room, then send its invitation to your players.</p>
+      <button id="create" class="primary">Host a room <span aria-hidden="true">↗</span></button>
+      <form id="join-form" class="join-form"><label for="invite">Have an invitation?</label><div class="input-row"><input id="invite" placeholder="Paste the room link" autocomplete="off" required><button class="secondary" type="submit">Join room</button></div></form>
+    </section>
+    <section id="room-panel" class="panel" hidden aria-labelledby="room-title">
+      <div class="panel-top"><span id="role" class="eyebrow">PLAYER</span><span id="connection" class="badge" role="status">Connecting…</span></div>
+      <div class="room-heading"><div><h2 id="room-title">A word only you know.</h2><p id="room-description">Submit your word and wait for the host.</p></div><div class="count"><strong id="count">0</strong><span>words submitted</span></div></div>
+      <div id="host-controls" class="host-controls" hidden><button id="share" class="secondary">Copy invitation <span aria-hidden="true">↗</span></button><button id="show" class="primary" disabled>Show words</button><p id="show-note">Showing the words closes submissions. Only this host tab will see the list.</p></div>
+      <form id="word-form"><label for="word">YOUR SECRET WORD</label><div class="input-row"><input id="word" maxlength="80" placeholder="A person, a place, a possibility…" required autocomplete="off" autocapitalize="none" spellcheck="false"><button id="submit" class="primary" type="submit">Submit word <span aria-hidden="true">→</span></button></div><p class="hint">One word or short name. Once submitted, it cannot be changed.</p></form>
+      <div id="waiting" class="waiting" hidden><span class="waiting-mark" aria-hidden="true">✓</span><div><h3 id="waiting-title">Your word is in.</h3><p id="waiting-description">Keep it secret. Wait for the host to start the game.</p></div></div>
+      <section id="reveal" class="reveal" hidden aria-labelledby="reveal-title"><p class="eyebrow">THE WORDS ARE IN</p><h2 id="reveal-title">Meet your empire.</h2><p>Read these aloud. Their owners stay a mystery.</p><ul id="words" aria-label="Submitted words"></ul><button id="hide-words" class="secondary">Hide words</button></section>
+      <a class="start-over" href="./">Start a new room ↗</a>
+    </section>
+    <p id="message" class="message" role="status" aria-live="polite"></p>
+    <section class="how" aria-label="How it works"><div><b>01</b><h3>Pick your identity.</h3><p>Every player submits one secret word using the room link.</p></div><div><b>02</b><h3>Let the host reveal.</h3><p>The host closes entries and reads the shuffled list aloud.</p></div><div><b>03</b><h3>Build your empire.</h3><p>Put your phones down. Guess who chose each word.</p></div></section>
+  </main>
+  <footer><span>SMALL SECRETS. GREAT EMPIRES.</span><span>A game for the whole room.</span></footer>
+  <dialog id="confirm-show" aria-labelledby="confirm-title"><h2 id="confirm-title">Ready to show the words?</h2><p>This closes submissions for everyone. The word list will only be available in this host tab.</p><div class="dialog-actions"><button id="cancel-show" class="secondary">Keep collecting</button><button id="confirm-reveal" class="primary">Close entries & show</button></div></dialog>
+  <dialog id="copy-dialog" aria-labelledby="copy-title"><h2 id="copy-title">Invite your players.</h2><label for="copy-link">Copy this room link</label><input id="copy-link" readonly><button id="close-copy" class="secondary">Done</button></dialog>
+</body>
+</html>

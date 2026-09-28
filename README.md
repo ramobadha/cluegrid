@@ -95,6 +95,20 @@ python -m unittest discover -s tests -p 'test_*.py'
 
 The room browser checks use separate browser contexts for host, two guests, and an unrelated room. They exercise late joins, refresh, local outage fallback, cached snapshots, failed host writes, private-room isolation, results, resets, and new boards. The Python tests additionally check host authorization, simultaneous writes, expiration, validation, and CORS. Rebuild without `CLUEGRID_API_URL` to restore the default same-origin/local configuration.
 
+## Empire
+
+Empire is a second game at **https://ramobadha.github.io/empire/**. Its source is in `empire/`, and its room API is in `empire_api.py`, registered on the same Render service as ClueGrid. Locally, run the Flask server and open `/empire/`. `python build.py` also produces a standalone `dist/empire/` site.
+
+The host creates a private room and copies the invitation. Each player browser can submit one word or short name (up to 80 characters); duplicate words from different players are allowed. The host may also submit a word. Player identity is a browser capability, not an account: clearing storage or using another browser can create another participant.
+
+**Show words** atomically closes submissions and shuffles the list, displaying one word per line only to the host tab that first requested it. Neither players nor other host tabs receive the word list through room state. A separate viewer key stored in session storage lets that original tab retry or refresh. Closing that tab or clearing its storage may lose access; there is no reveal transfer. The list is never placed in an invitation. The UI renders submissions as text, not HTML.
+
+Empire requires the room service for collection and reveal. Connection failures retain the current draft and report unconfirmed actions; retries cannot create duplicate submissions. Rooms expire after seven days and are lost on a free Render restart/redeploy, like ClueGrid rooms. Up to 100 submissions are accepted per room.
+
+The `ramobadha/empire` repository deploys the standalone frontend using `deploy/empire-pages.yml`. Its workflow builds the current `main` source from this repository. After pushing Empire changes here, run **Deploy Empire** in that repository; API changes also require a Render deployment. No additional paid service is needed.
+
+Checks: `python -m unittest discover -s tests -p "test_*.py"` covers authorization, room isolation, idempotency, simultaneous show/submit requests, validation, and private snapshots. With the Flask server at port 8877, `python tests/empire_browser.py` covers separate host/player devices, tab ownership, refresh, failed submission retry, safe rendering, and phone/desktop layouts.
+
 ## Attribution
 
 Board-generation logic adapted from KodeNames (MIT); see `THIRD_PARTY_LICENSE.md`. Bundled `scripts/seedrandom.js` includes David Bau's MIT license. No original analytics or backend services are included.

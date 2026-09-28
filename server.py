@@ -15,8 +15,9 @@ import secrets
 import sqlite3
 import time
 
-from flask import Flask, abort, jsonify, request, send_from_directory
+from flask import Flask, abort, jsonify, request, send_from_directory, redirect
 from werkzeug.exceptions import HTTPException
+from empire_api import register_empire
 
 ROOT = Path(__file__).resolve().parent
 ROOM_LIFETIME = 7 * 24 * 60 * 60
@@ -204,9 +205,19 @@ def create_app(database=None, static_directory=None, allowed_origins=None):
     def index():
         return send_from_directory(static_directory, 'index.html')
 
+    register_empire(app, connect, payload)
+
+    @app.get('/empire')
+    def empire_redirect():
+        return redirect('/empire/', code=308)
+
+    @app.get('/empire/')
+    def empire_index():
+        return send_from_directory(static_directory / 'empire', 'index.html')
+
     @app.get('/<path:path>')
     def assets(path):
-        if path.split('/')[0] not in ('styles', 'scripts', 'data'):
+        if path.split('/')[0] not in ('styles', 'scripts', 'data', 'empire'):
             abort(404)
         return send_from_directory(static_directory, path)
 

@@ -97,6 +97,20 @@ def main():
     html = re.sub(r'(src|href)="((?:scripts|styles|data)/[^"?]+\.(?:js|css))"', version_asset, html)
     (output / 'index.html').write_text(html, encoding='utf-8')
     (output / '.nojekyll').touch()
+    empire = output / 'empire'
+    shutil.copytree(ROOT / 'empire', empire, dirs_exist_ok=True)
+    shutil.copy2(output / 'scripts/config.js', empire / 'config.js')
+    shutil.copy2(ROOT / 'styles/fonts.css', empire / 'fonts.css')
+    shutil.copytree(ROOT / 'styles/fonts', empire / 'fonts', dirs_exist_ok=True)
+    shutil.copy2(ROOT / 'THIRD_PARTY_LICENSE.md', empire / 'THIRD_PARTY_LICENSE.md')
+    empire_html = (empire / 'index.html').read_text(encoding='utf-8')
+    def empire_asset(match):
+        attribute, asset = match.groups()
+        digest = hashlib.sha256((empire / asset).read_bytes()).hexdigest()[:16]
+        return f'{attribute}="{asset}?v={digest}"'
+    empire_html = re.sub(r'(src|href)="([^"/?]+\.(?:js|css))"', empire_asset, empire_html)
+    (empire / 'index.html').write_text(empire_html, encoding='utf-8')
+    (empire / '.nojekyll').touch()
     print(f'Built dist/ with {len(words)} validated Gujarati terms (gu-v2); retained {len(banks["gu-v1"])} legacy terms (gu-v1).')
 
 if __name__ == '__main__':
