@@ -254,6 +254,10 @@ body.game-focus .card .number { top: 3px; font-size: 8px; }
 .card.synced-reveal.neutral { background: rgb(216 198 165 / 28%); border-color: #b8a78480; }
 .card.synced-reveal.assassin { background: rgb(48 57 54 / 22%); border-color: #30393680; }
 .card.synced-reveal .meaning, .card.synced-reveal .number { color: #000; }
+.card.spy-revealed.revealed { background: #fff; color: #000; }
+.card.spy-revealed.red { color: var(--red); }
+.card.spy-revealed.blue { color: var(--blue); }
+.card.spy-revealed .meaning, .card.spy-revealed .number { color: inherit; }
 body.game-focus .board-heading { flex: 0 0 48px; min-height: 48px; gap: 10px; padding: 2px 4px; margin: 0 52px 0 4px; justify-content: flex-start; }
 body.game-focus .scores { margin-right: auto; gap: 10px; }
 body.game-focus .board-heading .focus-mode { display: none; }

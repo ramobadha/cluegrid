@@ -65,9 +65,29 @@ with sync_playwright() as p:
     page.get_by_role('button', name='Show key', exact=True).click()
     assert page.locator('.card.assassin').count() == 1
     assert page.locator('.revealed.synced-reveal').count() == 1
-    assert page.locator('.revealed .term').evaluate('e => getComputedStyle(e).color') == 'rgb(0, 0, 0)'
+    revealed = page.locator('.revealed')
+    assert revealed.evaluate('e => getComputedStyle(e).backgroundColor') == 'rgb(255, 255, 255)'
+    expected_color = revealed.evaluate("e => e.classList.contains('red') ? 'rgb(165, 66, 55)' : e.classList.contains('blue') ? 'rgb(53, 111, 141)' : 'rgb(0, 0, 0)'")
+    assert revealed.locator('.term').evaluate('e => getComputedStyle(e).color') == expected_color
+    assert revealed.locator('.meaning').evaluate('e => getComputedStyle(e).color') == expected_color
     assert all(label in ['', '\u2713'] for label in page.locator('.identity').all_text_contents())
     assert page.locator('.card:not(.revealed).synced-reveal').count() == 0
+    styling = browser.new_page()
+    styling.goto(f'{base_url}/?seed=spymaster-colors')
+    styling.locator('#confirm').uncheck()
+    teams = styling.evaluate("Game.generate('spymaster-colors', WORD_BANKS['gu-v2'], Math.seedrandom).cards.map(c => c.team)")
+    colors = {'red': 'rgb(165, 66, 55)', 'blue': 'rgb(53, 111, 141)', 'neutral': 'rgb(0, 0, 0)', 'assassin': 'rgb(0, 0, 0)'}
+    for team in colors:
+        styling.locator(f'[data-index="{teams.index(team)}"]').click()
+    styling.locator('#spymaster').click()
+    styling.get_by_role('button', name='Show key', exact=True).click()
+    for team, color in colors.items():
+        card = styling.locator(f'.revealed.{team}')
+        assert card.evaluate('e => getComputedStyle(e).backgroundColor') == 'rgb(255, 255, 255)'
+        assert card.locator('.term').evaluate('e => getComputedStyle(e).color') == color
+        assert card.locator('.meaning').evaluate('e => getComputedStyle(e).color') == color
+    assert all(label in ['', '\u2713'] for label in styling.locator('.identity').all_text_contents())
+    styling.close()
     page.locator('#swap-languages').click()
     assert page.locator('#spymaster').get_attribute('aria-pressed') == 'true'
     assert page.locator('.revealed').count() == 1
