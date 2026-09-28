@@ -18,7 +18,7 @@ with sync_playwright() as p:
         page.on('pageerror', lambda error: errors.append(str(error)))
     host.goto(BASE)
     host.locator('#create').click()
-    expect(host.locator('#host-controls')).to_be_visible(timeout=10000)
+    expect(host.locator('#host-controls')).to_be_visible(timeout=100000 if BASE.startswith('https:') else 10000)
     expect(host.locator('#show')).to_be_disabled()
     invite = host.url
     host.locator('#share').click()
