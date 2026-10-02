@@ -103,6 +103,7 @@ def main():
     shutil.copy2(ROOT / 'styles/fonts.css', empire / 'fonts.css')
     shutil.copytree(ROOT / 'styles/fonts', empire / 'fonts', dirs_exist_ok=True)
     shutil.copy2(ROOT / 'THIRD_PARTY_LICENSE.md', empire / 'THIRD_PARTY_LICENSE.md')
+    shutil.copy2(ROOT / 'styles/game-nav.css', empire / 'game-nav.css')
     empire_html = (empire / 'index.html').read_text(encoding='utf-8')
     def empire_asset(match):
         attribute, asset = match.groups()
@@ -111,6 +112,23 @@ def main():
     empire_html = re.sub(r'(src|href)="([^"/?]+\.(?:js|css))"', empire_asset, empire_html)
     (empire / 'index.html').write_text(empire_html, encoding='utf-8')
     (empire / '.nojekyll').touch()
+    # Standalone artifact for the /imposter/ Pages repository.
+    imposter = output / 'imposter'
+    shutil.copytree(ROOT / 'imposter', imposter, dirs_exist_ok=True)
+    for source, target in ((output / 'scripts/config.js', 'config.js'),
+                           (ROOT / 'styles/fonts.css', 'fonts.css'),
+                           (ROOT / 'styles/game-nav.css', 'game-nav.css'),
+                           (ROOT / 'THIRD_PARTY_LICENSE.md', 'THIRD_PARTY_LICENSE.md')):
+        shutil.copy2(source, imposter / target)
+    shutil.copytree(ROOT / 'styles/fonts', imposter / 'fonts', dirs_exist_ok=True)
+    imposter_html = (imposter / 'index.html').read_text(encoding='utf-8')
+    def imposter_asset(match):
+        attribute, asset = match.groups()
+        digest = hashlib.sha256((imposter / asset).read_bytes()).hexdigest()[:16]
+        return f'{attribute}="{asset}?v={digest}"'
+    imposter_html = re.sub(r'(src|href)="([^"/?]+\.(?:js|css))"', imposter_asset, imposter_html)
+    (imposter / 'index.html').write_text(imposter_html, encoding='utf-8')
+    (imposter / '.nojekyll').touch()
     print(f'Built dist/ with {len(words)} validated Gujarati terms (gu-v2); retained {len(banks["gu-v1"])} legacy terms (gu-v1).')
 
 if __name__ == '__main__':

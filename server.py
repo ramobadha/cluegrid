@@ -18,6 +18,7 @@ import time
 from flask import Flask, abort, jsonify, request, send_from_directory, redirect
 from werkzeug.exceptions import HTTPException
 from empire_api import register_empire
+from imposter_api import register_imposter
 
 ROOT = Path(__file__).resolve().parent
 ROOM_LIFETIME = 7 * 24 * 60 * 60
@@ -206,6 +207,15 @@ def create_app(database=None, static_directory=None, allowed_origins=None):
         return send_from_directory(static_directory, 'index.html')
 
     register_empire(app, connect, payload)
+    register_imposter(app, connect, payload)
+
+    @app.get('/imposter')
+    def imposter_redirect():
+        return redirect('/imposter/', code=308)
+
+    @app.get('/imposter/')
+    def imposter_index():
+        return send_from_directory(static_directory / 'imposter', 'index.html')
 
     @app.get('/empire')
     def empire_redirect():
@@ -217,7 +227,7 @@ def create_app(database=None, static_directory=None, allowed_origins=None):
 
     @app.get('/<path:path>')
     def assets(path):
-        if path.split('/')[0] not in ('styles', 'scripts', 'data', 'empire'):
+        if path.split('/')[0] not in ('styles', 'scripts', 'data', 'empire', 'imposter'):
             abort(404)
         return send_from_directory(static_directory, path)
 

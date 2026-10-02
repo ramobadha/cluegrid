@@ -6,10 +6,11 @@
   <meta name="description" content="One secret word each. One room. Let the game of Empire begin.">
   <title>Empire — A game of secret identities</title>
   <link rel="stylesheet" href="fonts.css"><link rel="stylesheet" href="empire.css">
+  <link rel="stylesheet" href="game-nav.css">
   <script defer src="config.js"></script><script defer src="empire.js"></script>
 </head>
 <body>
-  <header><a class="brand" href="./" aria-label="Empire home"><span aria-hidden="true">♜</span> EMPIRE</a><nav class="game-switcher" aria-label="Games"><a href="/cluegrid/">ClueGrid</a><a href="/empire/" aria-current="page">Empire</a></nav></header>
+  <header><a class="brand" href="./" aria-label="Empire home"><span aria-hidden="true">♜</span> EMPIRE</a><nav aria-label="Games"><details class="games-menu"><summary>Games <span aria-hidden="true">⌄</span></summary><div><a href="/cluegrid/">ClueGrid</a><a href="/empire/" aria-current="page">Empire</a><a href="/imposter/">Imposter</a></div></details></nav></header>
   <main>
     <section class="intro"><p class="eyebrow">A GAME OF SECRET IDENTITIES</p><h1>One word.<br>A whole <em>empire.</em></h1><p>Choose your word. Keep your identity secret.<br>Let the host bring everyone together.</p><div class="seal" aria-hidden="true">E<span>LET THE GUESSING BEGIN</span></div></section>
     <section id="welcome" class="panel" aria-labelledby="welcome-title">

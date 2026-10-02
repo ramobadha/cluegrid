@@ -1,0 +1,13 @@
+/* Shared menu keeps navigation compact as the game collection grows. */
+.games-menu{position:relative;font:600 12px 'DM Sans',sans-serif;letter-spacing:0}
+.games-menu summary{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:44px;padding:10px 14px;border:1px solid var(--line);border-radius:6px;list-style:none;cursor:pointer;white-space:nowrap;background:var(--paper)}
+.games-menu summary::-webkit-details-marker{display:none}
+.games-menu summary:focus-visible{outline:3px solid #ad8039;outline-offset:3px}
+.games-menu>div{position:absolute;z-index:20;top:calc(100% + 6px);right:0;min-width:170px;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--paper);box-shadow:0 10px 32px #172d2926}
+.games-menu a{display:flex;align-items:center;min-height:44px;padding:10px 14px;border-radius:4px;text-decoration:none;color:var(--ink)}
+.games-menu a:hover,.games-menu a:focus-visible{background:#dfe4d5}
+.games-menu a[aria-current=page]{background:#e6e9dc;font-weight:700}
+.games-menu a[aria-current=page]::after{content:'✓';margin-left:auto;padding-left:20px}
+.masthead-actions{gap:14px}
+@media(max-width:700px){.masthead .edition{display:none}}
+@media(max-width:359px){.masthead-actions{gap:6px}.games-menu summary{padding-inline:10px;gap:8px}.masthead #help span{display:none}}

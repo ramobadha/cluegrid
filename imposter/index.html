@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#202d2a"><meta name="description" content="One room. Almost the same secret. A verbal word game for 3–20 players.">
+  <title>Imposter — Almost the same secret</title>
+  <link rel="stylesheet" href="fonts.css"><link rel="stylesheet" href="imposter.css"><link rel="stylesheet" href="game-nav.css">
+  <script defer src="config.js"></script><script defer src="imposter.js"></script>
+</head>
+<body>
+  <header><a class="brand" href="./"><span aria-hidden="true">◈</span> IMPOSTER</a><nav aria-label="Games"><details class="games-menu"><summary>Games <span aria-hidden="true">⌄</span></summary><div><a href="/cluegrid/">ClueGrid</a><a href="/empire/">Empire</a><a href="/imposter/" aria-current="page">Imposter</a></div></details></nav></header>
+  <main>
+    <section class="intro"><p class="eyebrow">A LITTLE DOUBT. A LOT OF BLUFF.</p><h1>Almost the<br><em>same secret.</em></h1><p>Choose your words carefully.<br>Someone at the table has a different story.</p><div class="motif" aria-hidden="true"><span>?</span><span>?</span><span>!</span></div></section>
+    <section id="welcome" class="panel">
+      <p class="eyebrow">03–20 PLAYERS · PLAY OUT LOUD</p><h2>Gather your suspects.</h2>
+      <p>Everyone uses their own device. The host plays too.</p>
+      <form id="create-form"><label for="host-name">Your name</label><div class="input-row"><input id="host-name" maxlength="30" required autocomplete="nickname" placeholder="What should we call you?"><button id="create" class="primary">Host a room <span aria-hidden="true">↗</span></button></div></form>
+      <form id="invite-form" class="divider"><label for="invite">Already invited?</label><div class="input-row"><input id="invite" required placeholder="Paste an Imposter room link"><button class="secondary">Open room</button></div></form>
+    </section>
+    <section id="room-panel" class="panel" hidden>
+      <div class="panel-top"><p id="phase" class="eyebrow">CONNECTING</p><span id="connection" role="status">Connecting…</span></div>
+      <div class="room-heading"><h2 id="room-title">Your private room.</h2><button id="share" class="secondary">Copy invite ↗</button></div>
+      <form id="join-form" hidden><label for="player-name">Your name</label><div class="input-row"><input id="player-name" required maxlength="30" autocomplete="nickname" placeholder="Choose a name"><button id="join" class="primary">Join the room</button></div></form>
+      <p id="spectating" hidden>The round has started. Wait for the host to reopen the lobby to join.</p>
+      <section id="lobby" hidden>
+        <div class="section-heading"><h3>At the table</h3><span id="player-count"></span></div><ul id="players"></ul>
+        <div id="settings" class="divider" hidden>
+          <label for="mode">How should the imposter play?</label><select id="mode"><option value="different">Different word</option><option value="blank">No word</option></select>
+          <p id="mode-note" class="hint">Everyone sees a word and its meaning. Imposters get a related word; nobody is told their role.</p>
+          <label for="imposter-count">Number of imposters</label><select id="imposter-count"><option value="auto">Recommended</option></select><p id="recommendation" class="hint"></p>
+          <button id="start" class="primary">Deal the secrets ↗</button>
+        </div><p id="wait-host" class="hint">The host will deal when everyone has joined.</p>
+      </section>
+      <section id="playing" hidden>
+        <p id="round-info" class="hint"></p>
+        <div id="private-card" class="private-card"><p class="eyebrow">FOR YOUR EYES ONLY</p><div id="secret" hidden><h2 id="secret-word"></h2><p id="secret-meaning"></p></div><p id="covered">Your secret is face down.</p><button id="peek" class="secondary">Show my secret</button></div>
+        <p class="hint">Take turns giving a clue. Discuss and vote out loud. Keep your screen private.</p>
+        <button id="end" class="secondary" hidden>End round & reveal everyone</button>
+      </section>
+      <section id="results" hidden><p class="eyebrow">THE SECRET IS OUT</p><h2>Did you spot them?</h2><div id="word-pair"></div><ul id="result-list"></ul><button id="next" class="primary" hidden>Reopen lobby · next round ↗</button></section>
+      <a class="home-link" href="./">Leave this screen</a>
+    </section>
+    <p id="message" role="status" aria-live="polite"></p>
+    <section class="how"><div><b>01 / DEAL</b><h3>Same category. Different secret.</h3><p>Pick a mode. Let the app assign the words and imposters privately.</p></div><div><b>02 / DOUBT</b><h3>Listen between the lines.</h3><p>Give short clues without saying your word. Discuss who sounds different.</p></div><div><b>03 / DISCOVER</b><h3>Make your call.</h3><p>Vote together. When your group is done, the host reveals the assignments.</p></div></section>
+    <details class="rules"><summary>Rules & recommended setup</summary><p>Start with 4–10 players for an easy first game; 3–20 are supported. Use 1 imposter for 3–6 players, 2 for 7–11, or 3 for 12–20. The host can change this, keeping imposters below half the group.</p><p><strong>Different word:</strong> ordinary players share one word; imposters share a related word. Roles stay unknown until the final reveal. <strong>No word:</strong> imposters see that they have no word and must bluff.</p><p>Go around the table giving clues, then discuss and vote. Resolve ties with another clue and vote. Eliminated players stop giving clues and voting. Suggested house rule: the group wins by eliminating all imposters; imposters win if their remaining number equals the ordinary players. Agree on optional last-chance word guesses before starting. The app does not track votes or choose a winner.</p></details>
+  </main><footer>KEEP A STRAIGHT FACE. <span>A game for the whole room.</span></footer>
+  <dialog id="end-dialog"><h2>Ready for the reveal?</h2><p>This ends the round and shows everyone’s role and word to the room.</p><div class="input-row"><button id="cancel-end" class="secondary">Keep playing</button><button id="confirm-end" class="primary">Reveal everyone</button></div></dialog>
+  <dialog id="copy-dialog"><h2>Invite your players.</h2><label for="copy-link">Copy this room link</label><input id="copy-link" readonly><button id="close-copy" class="secondary">Done</button></dialog>
+</body></html>

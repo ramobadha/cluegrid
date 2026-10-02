@@ -109,6 +109,10 @@ The `ramobadha/empire` repository deploys the standalone frontend using `deploy/
 
 Checks: `python -m unittest discover -s tests -p "test_*.py"` covers authorization, room isolation, idempotency, simultaneous show/submit requests, validation, and private snapshots. With the Flask server at port 8877, `python tests/empire_browser.py` covers separate host/player devices, tab ownership, refresh, failed submission retry, safe rendering, and phone/desktop layouts.
 
+## Imposter
+
+Imposter is available at **https://ramobadha.github.io/imposter/** with private shared rooms for 3–20 players, different-word and no-word modes, and host-controlled rounds. Read [IMPOSTER.md](IMPOSTER.md) for the full player guide, researched setup recommendations, privacy behavior, and deployment details. Its frontend lives in `imposter/` and its server logic in `imposter_api.py`; `imposter_words.py` stays server-only. The separate Pages repository uses `deploy/imposter-pages.yml` and the existing Render API.
+
 ## Attribution
 
 Board-generation logic adapted from KodeNames (MIT); see `THIRD_PARTY_LICENSE.md`. Bundled `scripts/seedrandom.js` includes David Bau's MIT license. No original analytics or backend services are included.
